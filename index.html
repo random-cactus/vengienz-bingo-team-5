@@ -646,7 +646,9 @@ function evidence(t, s){
 }
 /* still worth showing: in the future, or within the last hour */
 const upcoming = x => new Date(x.when).getTime() > Date.now() - 3600e3;
-const hasSession = s => s.sessions.some(upcoming);
+/* Verifying clears a tile's sessions, so this only bites on records edited
+   straight in the Firebase console - a finished tile never advertises a run. */
+const hasSession = s => s.status !== 'verified' && s.sessions.some(upcoming);
 const newSessionId = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 
 /* Assignees until it's verified, then the credited names. Switching earlier
@@ -1301,8 +1303,11 @@ function openTile(id){
             ${(isVerifier()||mine)?`<button class="btn" data-sess="${x.id}" data-do="remove" title="Remove this session">Remove</button>`:''}
           </div>
         </div>`}).join('')}</div>`
+      : s.status==='verified' ? ''
       :'<div class="note" style="margin-bottom:10px">Nothing planned yet.</div>'}
-      ${`<div class="sess-new">
+      ${s.status==='verified'
+        ? `<div class="note">Cleared when the tile was verified - there's nothing left to plan.</div>`
+        : `<div class="sess-new">
         <input type="datetime-local" id="sessWhen">
         <input type="text" id="sessNote" placeholder="Note - e.g. need 2 more">
         <button class="btn" id="sessAdd">Propose this time</button>
@@ -1323,11 +1328,7 @@ function openTile(id){
       ${!canEdit&&s.status==='pending'?`<div class="note" style="margin-top:9px">Waiting on a verifier - doesn't score yet.</div>`:''}
     </div>
 
-    <div class="field"><div class="flabel">Lines this tile sits on</div>
-      <div class="chips">${LINES.filter(l=>l.ids.includes(t.id)).map(l=>{
-        const dn=l.tiles.filter(x=>isDone(x.id)).length, done=dn===l.tiles.length;
-        return `<span class="chip ${done?'gold':''}">${l.label} · ${dn}/${l.tiles.length} · +${l.sum}</span>`}).join('')}</div>
-      <div class="note" style="margin-top:7px">Finish a line and it pays its points twice.</div></div>
+    
     <div class="field"><div class="flabel">Who wants this tile</div>
       <div class="chips">${cands(t).length?cands(t).map(c=>
         `<span class="chip ${RATE[c.r][1]}" title="${RATE[c.r][0]}">${RATE[c.r][2]} ${esc(c.name)}</span>`).join(''):'<span class="note">Nobody wants this one.</span>'}</div></div>`;
@@ -1409,10 +1410,10 @@ function openTile(id){
     if(!linkCount(s)) return toast('Add an evidence link first');
     /* a verifier filling this in IS the verification, so no pending step */
     act({status:'verified', submittedAt:now(), submittedBy:(s.by.length?s.by:s.assigned).join(', '),
-         verifiedAt:now(), verifiedBy:ME},
+         verifiedAt:now(), verifiedBy:ME, sessions:[]},
         'Verified');
   };
-  const ver=$('#verify');   if(ver) ver.onclick=()=>act({status:'verified', verifiedAt:now(), verifiedBy:ME}, 'Verified');
+  const ver=$('#verify');   if(ver) ver.onclick=()=>act({status:'verified', verifiedAt:now(), verifiedBy:ME, sessions:[]}, 'Verified');
   const rej=$('#reject');   if(rej) rej.onclick=()=>act({status:'open', submittedAt:'', submittedBy:'', verifiedAt:'', verifiedBy:''}, 'Sent back');
   const unv=$('#unverify'); if(unv) unv.onclick=()=>act({status:'open', submittedAt:'', submittedBy:'', verifiedAt:'', verifiedBy:''}, 'Un-verified');
 
@@ -1453,7 +1454,8 @@ function draft(){
         return `<span class="chip ${a.length?'p':''}" title="${esc(clean(t.task))}${a.length?' - '+esc(a.join(', ')):''}">${t.id}${a.length?' · '+esc(a[0])+(a.length>1?` +${a.length-1}`:''):''}</span>`}).join('')}${left.length>4?`<span class="chip">+${left.length-4}</span>`:''}</div></td></tr>`}).join('');
 
   const up=[];
-  for(const t of DATA.tasks) for(const x of prog(t.id).sessions) if(upcoming(x)) up.push({t,x});
+  for(const t of DATA.tasks){ const s=prog(t.id); if(s.status==='verified') continue;
+    for(const x of s.sessions) if(upcoming(x)) up.push({t,x}); }
   up.sort((a,b)=>a.x.when<b.x.when?-1:a.x.when>b.x.when?1:0);
   $('#sessTbl').innerHTML = up.length ? up.slice(0,20).map(({t,x})=>`
     <tr data-open="${t.id}">
