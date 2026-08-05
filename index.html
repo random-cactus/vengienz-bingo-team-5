@@ -198,6 +198,11 @@ tbody tr[data-open]{cursor:pointer}
 /* ---------- generic panel ---------- */
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
 .panel h3{font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+/* heading on the left, controls hard right, on one line */
+.panel-head{display:flex;align-items:center;gap:12px;min-height:32px;margin-bottom:12px}
+.panel-head h3{margin-bottom:0}
+.panel-head .sync{margin-left:auto;white-space:nowrap}
+.panel-head .btn{padding:6px 12px;flex:none}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .note{font-size:14px;color:var(--muted)}
 
@@ -501,14 +506,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
       <label class="flabel" style="margin:0">Sort tiles</label>
       <select id="sortBy" style="width:auto"><option value="board">Board order</option><option value="scarce">Fewest volunteers</option><option value="pts">Highest points</option></select>
       <span class="spacer"></span>
-      <span class="note">Ratings from the sign-up sheet.</span>
     </div>
-    <div class="panel" style="margin-bottom:18px">
-      <h3>Standings</h3>
-      <div class="note" style="margin-bottom:10px">Points from verified tiles you're credited on.
-        Everyone credited gets the full value, so these overlap - it's contribution, not a split of the 147.</div>
+    <div class="two" style="margin-bottom:18px">
+    <div class="panel">
+      <div class="panel-head"><h3>MVP Leaderboard</h3></div>
+      <div class="note" style="margin-bottom:10px">Points from verified tiles you're credited on.</div>
       <table><thead><tr><th class="num">#</th><th>Player</th><th class="num">Tiles</th><th class="num">Points</th>
         <th></th><th class="num">Pending</th><th class="num">Assigned</th></tr></thead><tbody id="leadTbl"></tbody></table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>EHB Leaderboard</h3>
+        <span class="sync" id="ehbSync"></span>
+        <button class="btn" id="ehbBtn">Update EHB</button>
+      </div>
+      <div class="note" style="margin-bottom:10px">Gained during the event only</div>
+      <table><thead><tr><th class="num">#</th><th>Player</th>
+        <th class="num" title="Efficient hours bossed gained between the event start and end">EHB gained</th>
+        <th></th></tr></thead><tbody id="ehbTbl"></tbody></table>
+    </div>
     </div>
     <div class="heat-wrap"><table class="heat" id="heat"></table></div>
     <div class="legend">
@@ -1525,6 +1542,88 @@ function suggest(){
   autosave(0);
 }
 
+/* ---------- EHB, from WiseOldMan ----------
+   Third-party, so it is never fetched automatically: 16 players is 16 requests
+   against a 20-per-minute limit, and hammering someone else's free API on page
+   load would be rude. One button, throttled, cached in this browser. */
+const WOM = 'https://api.wiseoldman.net/v2';
+const KEY_EHB = 'vengienz-bingo-2026:ehb';
+let EHB = {rows:{}, at:0, window:''};
+let ehbBusy = false;
+
+const eventWindow = () => [
+  new Date(DATA.event.start + 'Z').toISOString(),
+  new Date(DATA.event.end   + 'Z').toISOString()
+];
+
+async function fetchEhb(){
+  if(ehbBusy) return;
+  const [from, to] = eventWindow();
+  const names = DATA.players.map(p => ({name:p.name, wom:(p.wom || p.name)}));
+  ehbBusy = true; ehbSync(`0 / ${names.length}`); $('#ehbBtn').disabled = true;
+  const rows = {};
+  try{
+    for(let i=0;i<names.length;i++){
+      const {name, wom} = names[i];
+      ehbSync(`${i} / ${names.length}`);
+      try{
+        const url = `${WOM}/players/${encodeURIComponent(wom)}/gained`
+                  + `?startDate=${encodeURIComponent(from)}&endDate=${encodeURIComponent(to)}`;
+        const r = await fetch(url, {cache:'no-store'});
+        if(r.status === 404){ rows[name] = {err:'not on WiseOldMan'}; }
+        else if(r.status === 429){ throw new Error('WiseOldMan rate limit - wait a minute and try again'); }
+        else if(!r.ok){ rows[name] = {err:'HTTP '+r.status}; }
+        else {
+          const d = await r.json();
+          const v = ((((d||{}).data||{}).computed||{}).ehb||{}).value || {};
+          rows[name] = {gained: Math.max(0, +v.gained || 0), total: +v.end || 0};
+        }
+      }catch(e){
+        if(/rate limit/.test(e.message)) throw e;
+        rows[name] = {err:'unreachable'};
+      }
+      /* stay well inside 20/min */
+      if(i < names.length-1) await new Promise(r=>setTimeout(r, 400));
+    }
+    EHB = {rows, at:Date.now(), window:`${from}|${to}`};
+    ls.set(KEY_EHB, EHB);
+    toast('EHB updated');
+  }catch(e){
+    console.warn('[ehb]', e);
+    toast(e.message);
+  }finally{
+    ehbBusy = false; $('#ehbBtn').disabled = false; ehbSync(); ehbTable();
+  }
+}
+
+function ehbSync(msg){
+  const n = $('#ehbSync'); if(!n) return;
+  n.textContent = msg || (EHB.at ? 'Updated ' + ago(EHB.at) : 'Not fetched yet');
+}
+
+function ehbTable(){
+  const body = $('#ehbTbl'); if(!body) return;
+  ehbSync();
+  const rows = DATA.players.map(p => ({name:p.name, ...(EHB.rows[p.name] || {})}));
+  const any = rows.some(r => r.gained !== undefined);
+  if(!any){
+    body.innerHTML = `<tr><td colspan="4" class="note">Press <b>Update EHB</b></td></tr>`;
+    return;
+  }
+  rows.sort((a,b)=>(b.gained||0)-(a.gained||0) || a.name.localeCompare(b.name));
+  const max = Math.max(1, ...rows.map(r=>r.gained||0));
+  body.innerHTML = rows.map((r,i)=>{
+    const tied = i>0 && (rows[i-1].gained||0) === (r.gained||0);
+    return `<tr>
+      <td class="num" style="color:var(--faint)">${r.err?'':(tied?'':i+1)}</td>
+      <td>${esc(r.name)}${r.name===ME?' <span class="chip gold">you</span>':''}</td>
+      <td class="num" style="color:${r.gained?'var(--gold)':'var(--faint)'}">${
+        r.err ? `<span class="note">${esc(r.err)}</span>` : (r.gained||0).toFixed(1)}</td>
+      <td><span class="lead-bar"><i style="width:${((r.gained||0)/max*100).toFixed(1)}%"></i></span></td>
+    </tr>`;
+  }).join('');
+}
+
 /* ---------- multi-tile breakdown ----------
    Every tile that needs more than one piece of evidence, with the pieces still
    missing spelled out. Named parts come from `subs`; either/or tiles list their
@@ -1618,6 +1717,7 @@ function leaderboard(){
 
 function roster(){
   leaderboard();
+  ehbTable();
   let ts=DATA.tasks.slice();
   if(sortBy==='scarce') ts.sort((a,b)=>likers(a).length-likers(b).length||b.points-a.points);
   if(sortBy==='pts')    ts.sort((a,b)=>b.points-a.points);
@@ -1656,6 +1756,7 @@ $('#clearAssign').onclick=()=>{
 
 $('#sessTbl').onclick=e=>{ const tr=e.target.closest('tr[data-open]'); if(tr) openTile(tr.dataset.open); };
 $('#mtGrid').onclick=e=>{ const c=e.target.closest('[data-open]'); if(c) openTile(c.dataset.open); };
+$('#ehbBtn').onclick=fetchEhb;
 $('#mtToggle').onclick=e=>{ mtHideDone=!mtHideDone;
   e.target.textContent = mtHideDone?'Show finished':'Hide finished'; multi(); };
 $('#setDb').onclick=askDb;
@@ -1699,6 +1800,7 @@ $('#banner').onclick=e=>{
   META  = ls.get(KEY_META, META) || META;
   LOCAL = ls.get(KEY_LOCAL, {}) || {};
   ME    = String(ls.get(KEY_ME, '') || '');
+  EHB   = ls.get(KEY_EHB, EHB) || EHB;
   setTheme(ls.get(KEY_THEME, '')
            || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
 
@@ -1707,6 +1809,9 @@ $('#banner').onclick=e=>{
   try{ RAW = start||SEED; adopt(normalize(RAW)); }
   catch(e){ console.warn('[db] cached copy unusable, falling back to seed:', e);
             RAW = SEED; adopt(normalize(RAW)); }
+
+  /* a cached figure for a different window would be quietly wrong */
+  if(EHB.window && EHB.window !== eventWindow().join('|')) EHB = {rows:{}, at:0, window:''};
 
   show('board'); renderAll();
 
