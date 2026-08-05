@@ -540,8 +540,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 <div class="toast" id="toast"></div>
 
 <script>
-/* Offline fallback. Only used when there's no cached copy and the fetch fails. */
-const SEED = {"event":{"name":"Vengienz Summer Bingo 2026","start":"2026-08-07T17:00:00","end":"2026-08-16T17:00:00","rowMult":2,"colMult":0},"boards":[{"key":"6x6","name":"PvM Board","size":6},{"key":"4x4","name":"Collector Board","size":4}],"players":[{"name":"GA1","discord":"GA1/Gim Ga1","wom":"Gim Ga1"},{"name":"Napsuttaja","discord":"Napsuttaja | anti","wom":"Napsuttaja"},{"name":"oKsirf","discord":"oKsirf","wom":"oKsirf"},{"name":"Diebels","discord":"Diebels","wom":"Diebels"},{"name":"MrBapparappa","discord":"MrBapparappa","wom":"MrBapparappa"},{"name":"Splazzoid","discord":"Splazzoid","wom":"Splazzoid"},{"name":"cefax","discord":"cefax","wom":"cefax"},{"name":"Zaphir","discord":"Zaphir","wom":"Zaphir"},{"name":"TuhmaTuma","discord":"TuhmaTuma","wom":"TuhmaTuma"},{"name":"Numquam Quit","discord":"Numquam Quit","wom":"Numquam Quit"},{"name":"710 710 710","discord":"710 710 710","wom":"710 710 710"},{"name":"ClimberAZ","discord":"ClimberAZ","wom":"ClimberAZ"},{"name":"Schysstkuk","discord":"Schysstkuk","wom":"Schysstkuk"},{"name":"Dry Stink","discord":"Dry Stink","wom":"Dry Stink"},{"name":"Erenglodill","discord":"Erenglodill","wom":"Erenglodill"},{"name":"Ehren Mann","discord":"Ehren Mann","wom":"Ehren Mann"}],"tasks":[{"id":"A01","board":"6x6","row":1,"col":1,"task":"3 Raids armor pieces","points":4,"ss":3,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A02","board":"6x6","row":1,"col":2,"task":"Any Dragonbane Weapon","points":2,"ss":1,"prefs":[1,1,1,2,1,1,2,1,1,1,1,2,1,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A03","board":"6x6","row":1,"col":3,"task":"Dragon Harpoon or Dragon Pick","points":1,"ss":1,"prefs":[2,2,2,2,3,1,2,2,2,1,1,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A04","board":"6x6","row":1,"col":4,"task":"Completed Rupture","points":3,"ss":3,"prefs":[2,4,2,1,3,3,2,2,3,1,1,1,1,2,2,2],"subs":["Onyx","Zenyte","Fang"],"pool":[],"alts":[]},{"id":"A05","board":"6x6","row":1,"col":5,"task":"Completed Venator Bow","points":5,"ss":5,"prefs":[1,2,3,3,2,3,2,3,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A06","board":"6x6","row":1,"col":6,"task":"3 Zenyte Shards","points":2,"ss":3,"prefs":[2,1,2,2,2,3,3,2,1,1,2,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A07","board":"6x6","row":2,"col":1,"task":"Mix/Match Moons set","points":1,"ss":4,"prefs":[1,2,2,3,1,2,2,3,2,1,1,2,1,1,1,1],"subs":["Helm","Top","Bottom","Weapon"],"pool":[],"alts":[]},{"id":"A08","board":"6x6","row":2,"col":2,"task":"2 Inferno GM speed runs or 4 Colo GM speed runs","points":5,"ss":4,"prefs":[4,1,1,4,3,2,1,2,4,4,4,4,4,4,4,4],"subs":[],"pool":[],"alts":[{"label":"2 Inferno GM speeds","parts":["Inferno GM speed","Inferno GM speed"]},{"label":"4 Colo GM speeds","parts":["Colo GM speed","Colo GM speed","Colo GM speed","Colo GM speed"]}]},{"id":"A09","board":"6x6","row":2,"col":3,"task":"Nightmare Unique","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,2,1,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A10","board":"6x6","row":2,"col":4,"task":"4 Blood Shards","points":2,"ss":4,"prefs":[1,3,2,1,3,2,2,2,1,1,1,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A11","board":"6x6","row":2,"col":5,"task":"Raids Weapon","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A12","board":"6x6","row":2,"col":6,"task":"Dragon WarHammer","points":5,"ss":1,"prefs":[2,3,3,3,4,3,2,4,2,2,3,3,2,1,3,2],"subs":[],"pool":[],"alts":[]},{"id":"A13","board":"6x6","row":3,"col":1,"task":"2 Colosseum Uniques","points":3,"ss":2,"prefs":[2,1,2,1,1,2,1,2,3,1,1,4,3,2,4,1],"subs":[],"pool":[],"alts":[]},{"id":"A14","board":"6x6","row":3,"col":2,"task":"Twinflame Staff","points":2,"ss":2,"prefs":[1,2,1,3,1,2,2,2,1,3,1,1,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A15","board":"6x6","row":3,"col":3,"task":"All 4 Dk Rings","points":1,"ss":4,"prefs":[2,2,2,2,1,3,2,1,3,1,1,2,2,1,2,1],"subs":["Berserker Ring","Warrior Ring","Archers Ring","Seers Ring"],"pool":[],"alts":[]},{"id":"A16","board":"6x6","row":3,"col":4,"task":"6 Unique Group GM time****","points":5,"ss":6,"prefs":[1,1,1,1,1,1,1,1,1,2,2,2,3,2,3,3],"subs":[],"pool":["Huey","Nightmare","Tob Duo","Tob 3 Man","Tob 4 Man","Tob 5 Man","HMT 3 Man","HMT 4 Man","HMT 5 Man","Chambers Trio","Chambers 5-Man","CM Trio","CM 5-Man","Tombs Speed Runner 2","Yama"],"poolNote":"Pick any 6 distinct combos","poolMax":1,"alts":[]},{"id":"A17","board":"6x6","row":3,"col":5,"task":"Any Boss Jar","points":2,"ss":1,"prefs":[2,2,2,1,3,2,2,2,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A18","board":"6x6","row":3,"col":6,"task":"Completed God Sword","points":3,"ss":4,"prefs":[2,2,2,2,1,3,2,1,1,1,1,2,1,1,3,2],"subs":["Blade 1","Blade 2","Blade 3","Hilt"],"pool":[],"alts":[]},{"id":"A19","board":"6x6","row":4,"col":1,"task":"Completed Tenacle Whip","points":1,"ss":2,"prefs":[2,3,3,3,3,2,2,2,2,1,1,2,2,1,1,1],"subs":["Whip","Kraken Tentacle"],"pool":[],"alts":[]},{"id":"A20","board":"6x6","row":4,"col":2,"task":"Raids Off-hand","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A21","board":"6x6","row":4,"col":3,"task":"Completed Confliction Gaunlets","points":3,"ss":3,"prefs":[1,1,2,1,2,2,2,3,1,1,1,1,2,2,3,2],"subs":["Onyx","Zenyte","Cloth"],"pool":[],"alts":[]},{"id":"A22","board":"6x6","row":4,"col":4,"task":"Mix/Match barrow set","points":1,"ss":4,"prefs":[1,2,1,4,1,1,2,2,1,1,1,2,1,1,1,1],"subs":["Helm","Top","Bottom","Weapon"],"pool":[],"alts":[]},{"id":"A23","board":"6x6","row":4,"col":5,"task":"Completed Rancor or Nally","points":3,"ss":3,"prefs":[2,2,3,3,2,1,2,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[{"label":"Rancor","parts":["Onyx","Zenyte","Fang"]},{"label":"Noxious Halberd","parts":["Halberd piece","Halberd piece","Halberd piece"]}]},{"id":"A24","board":"6x6","row":4,"col":6,"task":"Any Cerb Crystal***","points":2,"ss":1,"prefs":[2,1,3,1,2,2,2,3,3,1,1,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A25","board":"6x6","row":5,"col":1,"task":"12 GM times for Solo-Only Bosses*****","points":5,"ss":12,"prefs":[1,1,1,1,1,2,1,1,4,4,1,2,2,2,4,2],"subs":[],"pool":["Alchemical Hydra","Corrupted Gauntlet","Gauntlet","Zulrah","Phosani's Nightmare","Phantom Muspah","Duke Sucellus","Vardorvis","Leviathan","Araxxor","Gargoyles","Doom Racer","Inferno","Colo","Fight Caves"],"poolNote":"12 times total — each boss may be used twice","poolMax":2,"alts":[]},{"id":"A26","board":"6x6","row":5,"col":2,"task":"Voidwaker piece","points":3,"ss":1,"prefs":[1,2,3,2,2,3,2,4,3,1,1,3,1,1,3,3],"subs":[],"pool":[],"alts":[]},{"id":"A27","board":"6x6","row":5,"col":3,"task":"2 Raids Misc Purple (including Cox/TOB Kits and Dust)*","points":2,"ss":2,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A28","board":"6x6","row":5,"col":4,"task":"3 Uncut Onyx or Onyx (Tekton)","points":3,"ss":3,"prefs":[2,2,2,1,3,1,1,2,1,1,1,2,1,2,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A29","board":"6x6","row":5,"col":5,"task":"Completed Blessed Spirit Shield or Sigil","points":4,"ss":2,"prefs":[4,3,2,2,2,3,2,1,1,4,1,3,1,1,1,1],"subs":[],"pool":[],"alts":[{"label":"Sigil","parts":["Sigil"]},{"label":"Blessed Spirit Shield","parts":["Spirit Shield","Holy Elixir"]}]},{"id":"A30","board":"6x6","row":5,"col":6,"task":"2 Tormented Demons Uniques","points":3,"ss":2,"prefs":[2,3,2,3,2,3,3,2,3,3,1,2,1,2,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A31","board":"6x6","row":6,"col":1,"task":"2 Oathplate Armor piece or 900 Oathplate Shards**","points":3,"ss":2,"prefs":[1,2,2,1,2,1,1,1,2,1,1,2,2,2,4,2],"subs":[],"pool":[],"alts":[]},{"id":"A32","board":"6x6","row":6,"col":2,"task":"Jar of Light","points":1,"ss":1,"prefs":[2,1,1,1,3,2,2,2,2,2,2,1,2,1,4,1],"subs":[],"pool":[],"alts":[]},{"id":"A33","board":"6x6","row":6,"col":3,"task":"3 Virtus or SRA Pieces","points":5,"ss":3,"prefs":[2,1,1,1,1,3,1,3,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A34","board":"6x6","row":6,"col":4,"task":"Nex Unique (Pet doesn't count)","points":3,"ss":1,"prefs":[1,1,1,3,1,2,1,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A35","board":"6x6","row":6,"col":5,"task":"3 Brimstone Ring Pieces","points":3,"ss":3,"prefs":[2,3,2,4,3,2,2,3,3,4,1,1,2,1,2,4],"subs":[],"pool":[],"alts":[]},{"id":"A36","board":"6x6","row":6,"col":6,"task":"Enhanced Crystal Weapon Seed","points":5,"ss":1,"prefs":[2,2,1,1,3,3,2,4,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B01","board":"4x4","row":1,"col":1,"task":"2m Mining Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,3,1,2,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B02","board":"4x4","row":1,"col":2,"task":"Beef (Brutus pet)","points":2,"ss":1,"prefs":[2,4,3,4,4,4,3,2,1,1,1,1,2,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B03","board":"4x4","row":1,"col":3,"task":"2 God Trimmed Rune Armor or God D'hide pieces","points":2,"ss":2,"prefs":[2,2,2,2,3,2,3,3,3,1,2,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"B04","board":"4x4","row":1,"col":4,"task":"Dragon Ornament Kit","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,3,3,2,2,2,2,1,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B05","board":"4x4","row":2,"col":1,"task":"Obsidian Armor piece","points":2,"ss":1,"prefs":[2,3,2,4,2,2,3,2,1,2,1,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B06","board":"4x4","row":2,"col":2,"task":"Crystal Tool Seed or Zalcano shard","points":5,"ss":1,"prefs":[2,2,1,1,3,2,2,3,2,1,1,2,1,2,3,1],"subs":[],"pool":[],"alts":[]},{"id":"B07","board":"4x4","row":2,"col":3,"task":"Any Elemental Tome","points":1,"ss":1,"prefs":[2,4,1,2,1,3,3,2,1,1,2,2,3,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"B08","board":"4x4","row":2,"col":4,"task":"2m Fishing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,1,3,1,1,1,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B09","board":"4x4","row":3,"col":1,"task":"20 BA Queen kills******","points":4,"ss":20,"prefs":[2,3,1,1,1,1,1,2,2,1,1,2,2,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B10","board":"4x4","row":3,"col":2,"task":"2m Sailing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,1,1,2,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B11","board":"4x4","row":3,"col":3,"task":"16 Dragon Sheet Pieces","points":2,"ss":16,"prefs":[4,2,2,2,1,3,3,2,3,2,2,2,1,1,4,4],"subs":[],"pool":[],"alts":[]},{"id":"B12","board":"4x4","row":3,"col":4,"task":"Bottled Storm, Dragon Hook, and Dragon Cannon","points":3,"ss":3,"prefs":[4,3,2,3,1,2,3,1,3,1,1,2,2,1,4,4],"subs":["Bottled Storm","Dragon Hook","Dragon Cannon"],"pool":[],"alts":[]},{"id":"B13","board":"4x4","row":4,"col":1,"task":"Fletching Knife and Bowstring Spool*******","points":3,"ss":2,"prefs":[1,2,2,3,3,2,3,3,3,1,1,3,1,1,1,2],"subs":["Fletching Knife","Bowstring Spool"],"pool":[],"alts":[]},{"id":"B14","board":"4x4","row":4,"col":2,"task":"Completed Mix/Match God Book","points":2,"ss":4,"prefs":[2,2,3,2,3,3,3,3,3,2,2,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B15","board":"4x4","row":4,"col":3,"task":"Dragon or Demon Mask","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,4,3,1,2,2,2,1,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B16","board":"4x4","row":4,"col":4,"task":"3 Aranea Boots","points":2,"ss":3,"prefs":[2,3,3,1,3,3,3,1,1,1,1,1,1,1,2,2],"subs":[],"pool":[],"alts":[]}],"ratingKey":{"1":"Like","2":"Neutral","3":"Please no","4":"Can't do","5":"In progress"},"footnotes":{"*":"Raids misc purples include CoX/ToB kits and dust.","**":"2 Oathplate armour pieces, or 900 Oathplate shards.","***":"Any Cerberus crystal counts.","****":"6 different group GM times — each combo counts once.","*****":"12 GM times across solo-only bosses. Each boss can be done twice.","******":"20 Barbarian Assault Queen kills.","*******":"Fletching knife and bowstring spool."}};
+/* No bundled snapshot. Until the first read lands there is genuinely nothing to
+   show, and saying so is better than a board full of stale numbers. */
+const EMPTY = {event:{name:'Vengienz Summer Bingo 2026', start:'', end:''},
+               boards:[], players:[], tasks:[], ratingKey:{}, footnotes:{}, progress:{}};
 /* label, chip class, glyph. The glyph is what survives colour blindness. */
 const RATE = {1:['Like','g','\u2713'], 2:['Neutral','','\u00b7'], 3:['Please no','a','~'],
               4:["Can't do",'r','\u2717'], 5:['In progress','p','\u2026']};
@@ -583,6 +585,7 @@ const toArray = v => Array.isArray(v) ? v
 /* ---------- state ---------- */
 let DATA=null, RAW=null, LINES=[], view='board', hideDone=false, sortBy='board';
 let LOCAL={}, META={fetchedAt:0,dbUrl:''}, busy=false, lastError='', showDiff=false, ME='', THEME='dark';
+let tickTimer=null;
 
 /* ---------- storage ---------- */
 const ls = {
@@ -832,6 +835,20 @@ async function refresh({quiet=false}={}){
   }finally{ busy=false; setSync(); }
 }
 
+/* Reads go out on their own again, but only to keep the board inside this window.
+   Age-based rather than "fetch every 10 minutes": a tab that was asleep or
+   backgrounded catches up on the way back instead of drifting, and one that was
+   just refreshed by hand doesn't fetch twice. Hidden tabs never poll.
+   Unsaved edits are safe - refresh replaces DATA, and prog() still layers LOCAL
+   on top, so a failed write survives. */
+const AUTO_REFRESH = 600e3, TICK = 30e3;
+function autoRefresh(){
+  if(busy || document.hidden || !dbRoot()) return false;
+  if(Date.now() - META.fetchedAt < AUTO_REFRESH) return false;
+  refresh({quiet:true});
+  return true;
+}
+
 /* PATCH /progress.json only touches the tiles named in the body, so there's no
    read-modify-write and no way to clobber someone else's edit. Send each tile
    whole - PATCH replaces a named child outright. */
@@ -911,6 +928,11 @@ const cands   = t => DATA.players.map((p,i)=>({name:p.name,r:t.prefs[i]}))
 /* ---------- header ---------- */
 let clockTimer=null;
 function header(){
+  if(!DATA.tasks.length){
+    $('#window').textContent = 'Waiting for the first read of the database';
+    clearInterval(clockTimer); $('#clockLabel').textContent=''; $('#clock').innerHTML='';
+    return;
+  }
   const s=new Date(DATA.event.start+'Z'), e=new Date(DATA.event.end+'Z');
   const f=d=>d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
   $('#window').textContent = `${f(s)} → ${f(e)} · your local time · ${DATA.tasks.length} tiles across ${DATA.boards.length} boards`;
@@ -933,15 +955,23 @@ function header(){
 /* ---------- who am I ---------- */
 function identity(){
   const sel=$('#me'); if(!sel) return;
-  if(sel.dataset.built!=='1'){
+  /* Rebuilt whenever the roster changes, not once: the board can paint before
+     the first read lands, and the sheet can gain a player mid-event. */
+  const roster = DATA.players.map(p=>p.name).join(' ');
+  if(sel.dataset.roster !== roster){
     sel.innerHTML = '<option value="">- pick your name -</option>'
       + DATA.players.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
-    sel.dataset.built='1';
+    sel.dataset.roster = roster;
+  }
+  if(sel.dataset.wired!=='1'){
+    sel.dataset.wired='1';
     sel.onchange=e=>{ ME=e.target.value; ls.set(KEY_ME,ME);
                       renderAll(); if(cur) openTile(cur);
                       toast(ME?`Playing as ${ME}`:'Name cleared'); };
   }
-  if(!DATA.players.some(p=>p.name===ME)) ME='';   // roster changed under us
+  /* Only judge the name against a roster we actually have - an empty board must
+     not quietly sign you out while the first read is still in flight. */
+  if(DATA.players.length && !DATA.players.some(p=>p.name===ME)) ME='';
   sel.value = ME;
   $('#meWrap').classList.toggle('unset', !ME);
   $('#meRole').innerHTML = isVerifier() ? '<span class="vbadge">verifier</span>' : '';
@@ -1005,11 +1035,11 @@ function banner(){
   const n=unpublished(), out=[];
   if(!dbRoot()){
     out.push(`<div class="banner bad"><b>No database connected.</b>
-      This is a bundled snapshot. Nothing you do here is shared.
+      There's nothing to show until you connect one.
       <span class="push"><button class="btn solid" data-act="setbin">Connect a database</button></span></div>`);
   } else if(!META.fetchedAt){
-    out.push(`<div class="banner bad"><b>Not loaded yet.</b>
-      You're seeing a bundled snapshot, not the live board.
+    out.push(`<div class="banner bad"><b>Nothing loaded yet.</b>
+      The board stays empty until the first read of the database lands.
       <span class="push"><button class="btn solid" data-act="refresh">Refresh now</button></span></div>`);
   }
 
@@ -1504,10 +1534,12 @@ const KEY_EHB = 'vengienz-bingo-2026:ehb';
 let EHB = {rows:{}, at:0, window:''};
 let ehbBusy = false;
 
-const eventWindow = () => [
-  new Date(DATA.event.start + 'Z').toISOString(),
-  new Date(DATA.event.end   + 'Z').toISOString()
-];
+/* Empty before the first read lands, and toISOString() throws on an invalid date -
+   which used to take the whole render down with it. */
+const eventWindow = () => {
+  const a = new Date(DATA.event.start + 'Z'), b = new Date(DATA.event.end + 'Z');
+  return isNaN(a) || isNaN(b) ? ['',''] : [a.toISOString(), b.toISOString()];
+};
 
 async function fetchEhb(){
   if(ehbBusy) return;
@@ -1758,19 +1790,23 @@ $('#banner').onclick=e=>{
   setTheme(ls.get(KEY_THEME, '')
            || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
 
-  /* paint from the last known copy; Refresh is what goes to the network */
+  /* Paint the last known copy first so the board is instant, then go and read.
+     With no cache that first paint is an empty board saying as much - there is no
+     bundled snapshot to stand in for the real thing. */
   let start = ls.get(KEY, null);
-  try{ RAW = start||SEED; adopt(normalize(RAW)); }
-  catch(e){ console.warn('[db] cached copy unusable, falling back to seed:', e);
-            RAW = SEED; adopt(normalize(RAW)); }
+  try{ if(start){ RAW = start; adopt(normalize(RAW)); } else adopt(EMPTY); }
+  catch(e){ console.warn('[db] cached copy unusable, ignoring it:', e); adopt(EMPTY); }
 
   /* a cached figure for a different window would be quietly wrong */
   if(EHB.window && EHB.window !== eventWindow().join('|')) EHB = {rows:{}, at:0, window:''};
 
   show('board'); renderAll();
 
-  /* nothing fetches on load and nothing polls */
-  setInterval(()=>{ if(!busy){ setSync(); banner(); } }, 30000);
+  /* Read on load, then keep the board within AUTO_REFRESH of the database. Quiet,
+     because nobody asked for this one - a failure still raises the banner. */
+  refresh({quiet:true});
+  tickTimer = setInterval(()=>{ if(!busy){ setSync(); banner(); } autoRefresh(); }, TICK);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) autoRefresh(); });
 })();
 
 /* a failed write exists nowhere else, so don't let the tab go quietly */
