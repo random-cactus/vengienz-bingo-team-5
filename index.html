@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Team 5 · Vengienz Summer Bingo 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#100E0B; --panel:#1A1713; --raise:#241F18; --raise2:#2E2820;
+  --line:#38301F; --line2:#4A3F29;
+  --gold:#FFB020; --gold-dim:#7E5C14;
+  --purple:#B07CFF; --jade:#5CC47E; --rust:#C9502E; --amber:#D08A2E; --steel:#6E7A80;
+  --text:#EEE5D4; --muted:#9C917D; --faint:#6E6552;
+  --r:3px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink);
+  background-image:
+    radial-gradient(1200px 500px at 12% -8%, rgba(255,176,32,.07), transparent 60%),
+    radial-gradient(900px 460px at 96% 4%, rgba(176,124,255,.06), transparent 62%);
+  color:var(--text);
+  font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0;font-weight:600}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{color:var(--gold)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.px{font-family:"Pixelify Sans","Barlow",sans-serif;letter-spacing:.02em}
+.wrap{max-width:1420px;margin:0 auto;padding:0 22px 90px}
+
+/* ---------- header ---------- */
+.top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,176,32,.05),transparent)}
+.top-in{max-width:1420px;margin:0 auto;padding:26px 22px 20px;display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.85}
+.title{font-family:"Pixelify Sans",sans-serif;font-size:clamp(30px,5vw,50px);line-height:1;font-weight:700;margin-top:8px;
+  background:linear-gradient(180deg,#FFD98A,#FFB020 55%,#B4770F);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--muted);font-size:13.5px;margin-top:9px}
+.clock{margin-left:auto;text-align:right}
+.clock-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.clock-val{display:flex;gap:10px;margin-top:6px;justify-content:flex-end}
+.cu{background:var(--raise);border:1px solid var(--line);border-radius:var(--r);padding:7px 11px;min-width:62px;text-align:center}
+.cu b{display:block;font-family:"Pixelify Sans",sans-serif;font-size:25px;line-height:1;color:var(--gold)}
+.cu span{display:block;font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--faint);margin-top:5px;text-transform:uppercase}
+
+/* ---------- stat strip ---------- */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);margin-top:24px;overflow:hidden}
+.stat{background:var(--panel);padding:14px 16px}
+.stat-k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.stat-v{font-family:"Pixelify Sans",sans-serif;font-size:27px;line-height:1.15;margin-top:5px}
+.stat-v small{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--faint);font-weight:400}
+.bar{height:3px;background:var(--raise2);border-radius:2px;margin-top:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);transition:width .35s ease}
+.bar.p i{background:var(--purple)} .bar.j i{background:var(--jade)}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:2px;margin:26px 0 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{padding:9px 17px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);border:1px solid transparent;border-bottom:none;border-radius:var(--r) var(--r) 0 0;margin-bottom:-1px}
+.tab:hover{color:var(--text)}
+.tab[aria-selected=true]{color:var(--gold);background:var(--panel);border-color:var(--line);border-bottom-color:var(--panel)}
+.view[hidden]{display:none}
+
+/* ---------- board ---------- */
+.board{margin-bottom:34px}
+.board-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.board-head h2{font-family:"Pixelify Sans",sans-serif;font-size:21px;color:var(--text)}
+.board-meta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted)}
+.scroller{overflow-x:auto;padding-bottom:6px}
+.grid{display:grid;gap:7px;min-width:660px}
+.grid.n6{grid-template-columns:repeat(6,minmax(120px,1fr)) 62px}
+.grid.n4{grid-template-columns:repeat(4,minmax(120px,1fr)) 62px}
+.colrow{display:contents}
+.colhead{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--faint);
+  text-transform:uppercase;padding-bottom:2px;text-align:center;border-bottom:1px dashed var(--line)}
+.colhead.inert{opacity:.5}
+
+.tile{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:9px 10px 10px;text-align:left;min-height:104px;display:flex;flex-direction:column;gap:6px;
+  transition:border-color .16s,transform .16s,background .16s}
+.tile:hover{border-color:var(--line2);transform:translateY(-1px);background:var(--raise)}
+.tile:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.tile-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.tid{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--faint);letter-spacing:.08em}
+.pts{font-family:"Pixelify Sans",sans-serif;font-size:14px;color:var(--gold);line-height:1}
+.tname{font-size:12.6px;line-height:1.28;color:var(--text);flex:1}
+.tfoot{display:flex;align-items:center;gap:6px;margin-top:auto}
+.ss{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--muted);white-space:nowrap}
+.tbar{flex:1;height:3px;background:var(--raise2);border-radius:2px;overflow:hidden}
+.tbar i{display:block;height:100%;background:var(--amber);transition:width .3s}
+.who{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--purple);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.tile.done{background:linear-gradient(160deg,rgba(176,124,255,.16),rgba(176,124,255,.05));border-color:#5B3E8E}
+.tile.done .tname{color:#EBDCFF}
+.tile.done .tbar i{background:var(--purple)}
+.tile.dim{opacity:.45}
+.risk{position:absolute;top:0;right:0;width:0;height:0;border-top:11px solid var(--rust);border-left:11px solid transparent}
+
+/* seam rail — rows pay, columns don't */
+.seam{border:1px solid var(--line);border-left:2px solid var(--gold-dim);border-radius:var(--r);
+  background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 4px;position:relative;overflow:hidden}
+.seam b{font-family:"Pixelify Sans",sans-serif;font-size:15px;color:var(--gold-dim);line-height:1;z-index:1}
+.seam span{font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.1em;color:var(--faint);z-index:1}
+.seam .fill{position:absolute;left:0;bottom:0;width:100%;background:rgba(255,176,32,.10);transition:height .35s}
+.seam.lit{border-color:var(--gold);box-shadow:inset 0 0 18px rgba(255,176,32,.22)}
+.seam.lit b{color:var(--gold)}
+.seam.head{border:none;background:none}
+.seam.h{flex-direction:row;gap:7px;padding:5px 8px;border-left:1px solid var(--line);border-top:2px solid var(--gold-dim);min-height:34px}
+.seam.h .fill{left:0;bottom:0;height:100%;width:auto;transition:width .35s}
+.seam.corner{border:none;background:none}
+.diag-strip{display:flex;gap:7px;margin-top:7px;flex-wrap:wrap}
+.diag{flex:1;min-width:180px;position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);
+  border-left:2px solid var(--gold-dim);border-radius:var(--r);padding:8px 12px;display:flex;align-items:center;gap:10px}
+.diag .fill{position:absolute;left:0;top:0;height:100%;background:rgba(255,176,32,.10);transition:width .35s}
+.diag b{font-family:"Pixelify Sans",sans-serif;font-size:15px;color:var(--gold-dim);z-index:1}
+.diag em{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);z-index:1}
+.diag span{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--faint);z-index:1}
+.diag.lit{border-color:var(--gold);box-shadow:inset 0 0 18px rgba(255,176,32,.2)}
+.diag.lit b{color:var(--gold)}
+.tile.ondiag{box-shadow:inset 0 0 0 1px rgba(255,176,32,.13)}
+.seam.head span{color:var(--gold);opacity:.8}
+
+/* ---------- generic panel ---------- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.panel h3{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.note{font-size:13px;color:var(--muted)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);text-align:left;font-weight:500;padding:8px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 9px;border-bottom:1px solid rgba(56,48,31,.55);vertical-align:middle}
+tbody tr:hover{background:var(--raise)}
+.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- chips ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  padding:2.5px 7px;border-radius:2px;border:1px solid var(--line2);color:var(--muted);white-space:nowrap}
+.chip.g{color:var(--jade);border-color:rgba(92,196,126,.42);background:rgba(92,196,126,.09)}
+.chip.p{color:var(--purple);border-color:rgba(176,124,255,.42);background:rgba(176,124,255,.09)}
+.chip.r{color:var(--rust);border-color:rgba(201,80,46,.45);background:rgba(201,80,46,.10)}
+.chip.a{color:var(--amber);border-color:rgba(208,138,46,.42);background:rgba(208,138,46,.09)}
+.chip.gold{color:var(--gold);border-color:rgba(255,176,32,.42);background:rgba(255,176,32,.09)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+
+/* ---------- heatmap ---------- */
+.heat-wrap{overflow:auto;max-height:76vh;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.heat{border-collapse:separate;border-spacing:0;font-size:12px;min-width:940px;table-layout:fixed;width:100%}
+.heat th,.heat td{border-bottom:1px solid rgba(56,48,31,.5);padding:0}
+.heat thead th{position:sticky;top:0;z-index:3;background:var(--raise);height:136px;vertical-align:bottom;padding:0 0 8px}
+.heat thead th.corner{left:0;z-index:5;width:300px;vertical-align:bottom;padding:0 10px 8px;
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;color:var(--muted)}
+.heat tbody th{position:sticky;left:0;z-index:2;background:var(--panel);text-align:left;font-family:"Barlow",sans-serif;
+  font-size:12.3px;font-weight:400;color:var(--text);letter-spacing:0;text-transform:none;padding:5px 10px;
+  width:300px;border-right:1px solid var(--line);white-space:normal;line-height:1.25}
+.heat tbody tr:hover th{background:var(--raise)}
+.vname{writing-mode:vertical-rl;transform:rotate(180deg);font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  color:var(--muted);letter-spacing:.05em;white-space:nowrap;margin:0 auto;display:block}
+.cell{height:26px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  border-right:1px solid rgba(16,14,11,.7);cursor:default}
+.r1{background:rgba(92,196,126,.30);color:#CFF3DC}
+.r2{background:rgba(110,122,128,.20);color:#B7BFC3}
+.r3{background:rgba(208,138,46,.24);color:#F3D9AC}
+.r4{background:rgba(201,80,46,.32);color:#F6CBBB}
+.r5{background:rgba(176,124,255,.30);color:#E5D4FF}
+.r0{background:transparent;color:var(--faint)}
+
+/* ---------- drawer ---------- */
+.scrim{position:fixed;inset:0;background:rgba(8,7,5,.66);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(430px,100%);background:var(--panel);
+  border-left:1px solid var(--line2);z-index:50;transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.dr-head{padding:18px 20px 14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,176,32,.06),transparent)}
+.dr-body{padding:18px 20px 26px;overflow-y:auto;flex:1}
+.dr-close{position:absolute;top:14px;right:16px;font-size:22px;line-height:1;color:var(--muted);padding:4px 8px}
+.dr-close:hover{color:var(--text)}
+.field{margin-bottom:16px}
+.flabel{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+input[type=text],input[type=url],select,textarea{width:100%;background:var(--ink);border:1px solid var(--line);
+  color:var(--text);padding:8px 10px;border-radius:var(--r);font:inherit;font-size:13.5px}
+textarea{resize:vertical;min-height:62px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
+.stepper{display:flex;align-items:center;gap:10px}
+.step{width:34px;height:34px;border:1px solid var(--line2);border-radius:var(--r);font-size:17px;color:var(--gold);
+  display:flex;align-items:center;justify-content:center;background:var(--raise)}
+.step:hover{border-color:var(--gold)} .step:disabled{opacity:.3;cursor:not-allowed}
+.stepval{font-family:"Pixelify Sans",sans-serif;font-size:22px;min-width:64px;text-align:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 15px;border:1px solid var(--line2);
+  border-radius:var(--r);font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text);background:var(--raise);transition:.15s}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn.solid{background:var(--gold);color:#241A05;border-color:var(--gold);font-weight:600}
+.btn.solid:hover{background:#FFC44D;color:#241A05}
+.btn.done{background:rgba(176,124,255,.16);border-color:var(--purple);color:var(--purple)}
+.subgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.sub{display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r);
+  font-size:12px;background:var(--ink);text-align:left}
+.sub:hover{border-color:var(--line2)}
+.sub.on{border-color:var(--jade);background:rgba(92,196,126,.11);color:#CFF3DC}
+.box{width:12px;height:12px;border:1px solid var(--line2);border-radius:2px;flex:none}
+.sub.on .box{background:var(--jade);border-color:var(--jade)}
+
+/* ---------- misc ---------- */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.spacer{flex:1}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);margin-top:10px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,14px);background:var(--raise2);
+  border:1px solid var(--gold);color:var(--gold);padding:10px 18px;border-radius:var(--r);
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.08em;opacity:0;pointer-events:none;
+  transition:.22s;z-index:80}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.load{display:flex;align-items:center;gap:8px}
+.loadbar{width:78px;height:4px;background:var(--raise2);border-radius:2px;overflow:hidden}
+.loadbar i{display:block;height:100%;background:var(--purple)}
+@media (max-width:900px){ .two{grid-template-columns:1fr} .clock{margin-left:0} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div>
+      <div class="eyebrow">Vengienz · Team 5 · Old School RuneScape</div>
+      <h1 class="title">Summer Bingo 2026</h1>
+      <div class="lede" id="window">—</div>
+    </div>
+    <div class="clock">
+      <div class="clock-label" id="clockLabel">Starts in</div>
+      <div class="clock-val" id="clock"></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="strip" id="strip"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-view="board">Board</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="draft">Draft</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="roster">Roster</button>
+  </div>
+
+  <!-- BOARD -->
+  <section class="view" id="v-board">
+    <div class="toolbar">
+      <button class="btn" id="fToggle">Hide completed</button>
+      <span class="chip gold" id="bonusInfo"></span>
+      <span class="chip r">◤ thin bench</span>
+      <span class="chip">◇ on a diagonal</span>
+      <span class="spacer"></span>
+      <button class="btn" id="exp">Export JSON</button>
+      <button class="btn" id="imp">Import JSON</button>
+      <button class="btn" id="tsv">Copy for sheet</button>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+    <div id="boards"></div>
+  </section>
+
+  <!-- DRAFT -->
+  <section class="view" id="v-draft" hidden>
+    <div class="toolbar">
+      <button class="btn solid" id="suggest">Suggest assignments</button>
+      <button class="btn" id="clearAssign">Clear assignments</button>
+      <span class="note">Fills only empty tiles. Nothing is locked — override any pick in the tile drawer.</span>
+    </div>
+    <div class="two" style="margin-bottom:16px">
+      <div class="panel">
+        <h3>Coverage risk</h3>
+        <div class="note" style="margin-bottom:10px">Tiles with the thinnest bench. Volunteers are players who marked the tile <em>Like</em>; blockers marked it <em>Can't do</em>.</div>
+        <table><thead><tr><th>Tile</th><th class="num">Pts</th><th class="num">Volunteers</th><th class="num">Blocked</th></tr></thead><tbody id="riskTbl"></tbody></table>
+      </div>
+      <div class="panel">
+        <h3>Player load</h3>
+        <div class="note" style="margin-bottom:10px">Assigned tiles per player, and how many of those they actually wanted.</div>
+        <table><thead><tr><th>Player</th><th class="num">Assigned</th><th class="num">Points</th><th>Fit</th></tr></thead><tbody id="loadTbl"></tbody></table>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:16px">
+      <h3>Line priority</h3>
+      <div class="note" style="margin-bottom:10px">Every line pays its own total again when you complete it. Ranked by bonus per tile still outstanding — the cheapest doubling first.</div>
+      <table><thead><tr><th>Line</th><th>Board</th><th class="num">Bonus</th><th class="num">Left</th><th class="num">Pts / tile left</th><th>Outstanding</th></tr></thead><tbody id="lineTbl"></tbody></table>
+    </div>
+    <div class="panel">
+      <h3>Every tile — who's up for it</h3>
+      <table><thead><tr><th>Tile</th><th class="num">Pts</th><th class="num">SS</th><th>Assigned</th><th>Best candidates</th></tr></thead><tbody id="draftTbl"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ROSTER -->
+  <section class="view" id="v-roster" hidden>
+    <div class="toolbar">
+      <label class="flabel" style="margin:0">Sort tiles</label>
+      <select id="sortBy" style="width:auto"><option value="board">Board order</option><option value="scarce">Fewest volunteers</option><option value="pts">Highest points</option></select>
+      <span class="spacer"></span>
+      <span class="note">Ratings come straight from the PvM &amp; Collector board tabs.</span>
+    </div>
+    <div class="heat-wrap"><table class="heat" id="heat"></table></div>
+    <div class="legend">
+      <span><i class="sw" style="background:rgba(92,196,126,.55)"></i>1 Like</span>
+      <span><i class="sw" style="background:rgba(110,122,128,.45)"></i>2 Neutral</span>
+      <span><i class="sw" style="background:rgba(208,138,46,.5)"></i>3 Please no</span>
+      <span><i class="sw" style="background:rgba(201,80,46,.6)"></i>4 Can't do</span>
+      <span><i class="sw" style="background:rgba(176,124,255,.55)"></i>5 In progress</span>
+    </div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="dr-head">
+    <button class="dr-close" id="drClose" aria-label="Close">×</button>
+    <div class="mono" style="font-size:10px;letter-spacing:.15em;color:var(--muted)" id="drId"></div>
+    <h2 class="px" style="font-size:19px;margin-top:6px;line-height:1.2" id="drName"></h2>
+    <div class="chips" style="margin-top:9px" id="drChips"></div>
+  </div>
+  <div class="dr-body" id="drBody"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="file" accept="application/json" hidden>
+
+<script>
+const DATA = {"event":{"name":"Vengienz Summer Bingo 2026","start":"2026-08-07T17:00:00","end":"2026-08-16T17:00:00","rowMult":2,"colMult":0},"boards":[{"key":"6x6","name":"PvM Board","size":6},{"key":"4x4","name":"Collector Board","size":4}],"players":[{"name":"GA1","discord":"GA1/Gim Ga1","wom":"Gim Ga1"},{"name":"Napsuttaja","discord":"Napsuttaja | anti","wom":"Napsuttaja"},{"name":"oKsirf","discord":"oKsirf","wom":"oKsirf"},{"name":"Diebels","discord":"Diebels","wom":"Diebels"},{"name":"MrBapparappa","discord":"MrBapparappa","wom":"MrBapparappa"},{"name":"Splazzoid","discord":"Splazzoid","wom":"Splazzoid"},{"name":"cefax","discord":"cefax","wom":"cefax"},{"name":"Zaphir","discord":"Zaphir","wom":"Zaphir"},{"name":"TuhmaTuma","discord":"TuhmaTuma","wom":"TuhmaTuma"},{"name":"Numquam Quit","discord":"Numquam Quit","wom":"Numquam Quit"},{"name":"710 710 710","discord":"710 710 710","wom":"710 710 710"},{"name":"ClimberAZ","discord":"ClimberAZ","wom":"ClimberAZ"},{"name":"Schysstkuk","discord":"Schysstkuk","wom":"Schysstkuk"},{"name":"Dry Stink","discord":"Dry Stink","wom":"Dry Stink"},{"name":"Erenglodill","discord":"Erenglodill","wom":"Erenglodill"},{"name":"Ehren Mann","discord":"Ehren Mann","wom":"Ehren Mann"}],"tasks":[{"id":"A01","board":"6x6","row":1,"col":1,"task":"3 Raids armor pieces","points":4,"ss":3,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[]},{"id":"A02","board":"6x6","row":1,"col":2,"task":"Any Dragonbane Weapon","points":2,"ss":1,"prefs":[1,1,1,2,1,1,2,1,1,1,1,2,1,2,2,1],"subs":[],"pool":[]},{"id":"A03","board":"6x6","row":1,"col":3,"task":"Dragon Harpoon or Dragon Pick","points":1,"ss":1,"prefs":[2,2,2,2,3,1,2,2,2,1,1,2,1,1,2,1],"subs":[],"pool":[]},{"id":"A04","board":"6x6","row":1,"col":4,"task":"Completed Rupture","points":3,"ss":3,"prefs":[2,4,2,1,3,3,2,2,3,1,1,1,1,2,2,2],"subs":["Onyx","Zenyte","Fang"],"pool":[]},{"id":"A05","board":"6x6","row":1,"col":5,"task":"Completed Venator Bow","points":5,"ss":5,"prefs":[1,2,3,3,2,3,2,3,1,1,1,1,2,2,2,2],"subs":[],"pool":[]},{"id":"A06","board":"6x6","row":1,"col":6,"task":"3 Zenyte Shards","points":2,"ss":3,"prefs":[2,1,2,2,2,3,3,2,1,1,2,2,1,1,1,1],"subs":[],"pool":[]},{"id":"A07","board":"6x6","row":2,"col":1,"task":"Mix/Match Moons set","points":1,"ss":4,"prefs":[1,2,2,3,1,2,2,3,2,1,1,2,1,1,1,1],"subs":[],"pool":[]},{"id":"A08","board":"6x6","row":2,"col":2,"task":"2 Inferno GM speed runs or 4 Colo GM speed runs","points":5,"ss":4,"prefs":[4,1,1,4,3,2,1,2,4,4,4,4,4,4,4,4],"subs":[],"pool":[]},{"id":"A09","board":"6x6","row":2,"col":3,"task":"Nightmare Unique","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,2,1,2,2,2],"subs":[],"pool":[]},{"id":"A10","board":"6x6","row":2,"col":4,"task":"4 Blood Shards","points":2,"ss":4,"prefs":[1,3,2,1,3,2,2,2,1,1,1,2,1,1,1,1],"subs":[],"pool":[]},{"id":"A11","board":"6x6","row":2,"col":5,"task":"Raids Weapon","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[]},{"id":"A12","board":"6x6","row":2,"col":6,"task":"Dragon WarHammer","points":5,"ss":1,"prefs":[2,3,3,3,4,3,2,4,2,2,3,3,2,1,3,2],"subs":[],"pool":[]},{"id":"A13","board":"6x6","row":3,"col":1,"task":"2 Colosseum Uniques","points":3,"ss":2,"prefs":[2,1,2,1,1,2,1,2,3,1,1,4,3,2,4,1],"subs":[],"pool":[]},{"id":"A14","board":"6x6","row":3,"col":2,"task":"Twinflame Staff","points":2,"ss":2,"prefs":[1,2,1,3,1,2,2,2,1,3,1,1,1,1,1,1],"subs":[],"pool":[]},{"id":"A15","board":"6x6","row":3,"col":3,"task":"All 4 Dk Rings","points":1,"ss":4,"prefs":[2,2,2,2,1,3,2,1,3,1,1,2,2,1,2,1],"subs":[],"pool":[]},{"id":"A16","board":"6x6","row":3,"col":4,"task":"6 Unique Group GM time****","points":5,"ss":6,"prefs":[1,1,1,1,1,1,1,1,1,2,2,2,3,2,3,3],"subs":[],"pool":["Huey","Nightmare","Tob Duo","Tob 3 Man","Tob 4 Man","Tob 5 Man","HMT 3 Man","HMT 4 Man","HMT 5 Man","Chambers Trio","Chambers 5-Man","CM Trio","CM 5-Man","Tombs Speed Runner 2","Yama"],"poolNote":"Pick any 6 distinct combos"},{"id":"A17","board":"6x6","row":3,"col":5,"task":"Any Boss Jar","points":2,"ss":1,"prefs":[2,2,2,1,3,2,2,2,1,1,1,1,1,1,2,1],"subs":[],"pool":[]},{"id":"A18","board":"6x6","row":3,"col":6,"task":"Completed God Sword","points":3,"ss":4,"prefs":[2,2,2,2,1,3,2,1,1,1,1,2,1,1,3,2],"subs":[],"pool":[]},{"id":"A19","board":"6x6","row":4,"col":1,"task":"Completed Tenacle Whip","points":1,"ss":2,"prefs":[2,3,3,3,3,2,2,2,2,1,1,2,2,1,1,1],"subs":[],"pool":[]},{"id":"A20","board":"6x6","row":4,"col":2,"task":"Raids Off-hand","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[]},{"id":"A21","board":"6x6","row":4,"col":3,"task":"Completed Confliction Gaunlets","points":3,"ss":3,"prefs":[1,1,2,1,2,2,2,3,1,1,1,1,2,2,3,2],"subs":[],"pool":[]},{"id":"A22","board":"6x6","row":4,"col":4,"task":"Mix/Match barrow set","points":1,"ss":4,"prefs":[1,2,1,4,1,1,2,2,1,1,1,2,1,1,1,1],"subs":[],"pool":[]},{"id":"A23","board":"6x6","row":4,"col":5,"task":"Completed Rancor or Nally","points":3,"ss":3,"prefs":[2,2,3,3,2,1,2,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[]},{"id":"A24","board":"6x6","row":4,"col":6,"task":"Any Cerb Crystal***","points":2,"ss":1,"prefs":[2,1,3,1,2,2,2,3,3,1,1,2,1,1,2,1],"subs":[],"pool":[]},{"id":"A25","board":"6x6","row":5,"col":1,"task":"12 GM times for Solo-Only Bosses*****","points":5,"ss":12,"prefs":[1,1,1,1,1,2,1,1,4,4,1,2,2,2,4,2],"subs":[],"pool":["Alchemical Hydra","Corrupted Gauntlet","Gauntlet","Zulrah","Phosani's Nightmare","Phantom Muspah","Duke Sucellus","Vardorvis","Leviathan","Araxxor","Gargoyles","Doom Racer","Inferno","Colo","Fight Caves"],"poolNote":"12 times total \u2014 each boss may be used twice"},{"id":"A26","board":"6x6","row":5,"col":2,"task":"Voidwaker piece","points":3,"ss":1,"prefs":[1,2,3,2,2,3,2,4,3,1,1,3,1,1,3,3],"subs":[],"pool":[]},{"id":"A27","board":"6x6","row":5,"col":3,"task":"2 Raids Misc Purple (including Cox/TOB Kits and Dust)*","points":2,"ss":2,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[]},{"id":"A28","board":"6x6","row":5,"col":4,"task":"3 Uncut Onyx or Onyx (Tekton)","points":3,"ss":3,"prefs":[2,2,2,1,3,1,1,2,1,1,1,2,1,2,1,1],"subs":[],"pool":[]},{"id":"A29","board":"6x6","row":5,"col":5,"task":"Completed Blessed Spirit Shield or Sigil","points":4,"ss":2,"prefs":[4,3,2,2,2,3,2,1,1,4,1,3,1,1,1,1],"subs":[],"pool":[]},{"id":"A30","board":"6x6","row":5,"col":6,"task":"2 Tormented Demons Uniques","points":3,"ss":2,"prefs":[2,3,2,3,2,3,3,2,3,3,1,2,1,2,1,1],"subs":[],"pool":[]},{"id":"A31","board":"6x6","row":6,"col":1,"task":"2 Oathplate Armor piece or 900 Oathplate Shards**","points":3,"ss":2,"prefs":[1,2,2,1,2,1,1,1,2,1,1,2,2,2,4,2],"subs":[],"pool":[]},{"id":"A32","board":"6x6","row":6,"col":2,"task":"Jar of Light","points":1,"ss":1,"prefs":[2,1,1,1,3,2,2,2,2,2,2,1,2,1,4,1],"subs":[],"pool":[]},{"id":"A33","board":"6x6","row":6,"col":3,"task":"3 Virtus or SRA Pieces","points":5,"ss":3,"prefs":[2,1,1,1,1,3,1,3,1,1,1,1,1,1,2,1],"subs":[],"pool":[]},{"id":"A34","board":"6x6","row":6,"col":4,"task":"Nex Unique (Pet doesn't count)","points":3,"ss":1,"prefs":[1,1,1,3,1,2,1,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[]},{"id":"A35","board":"6x6","row":6,"col":5,"task":"3 Brimstone Ring Pieces","points":3,"ss":3,"prefs":[2,3,2,4,3,2,2,3,3,4,1,1,2,1,2,4],"subs":[],"pool":[]},{"id":"A36","board":"6x6","row":6,"col":6,"task":"Enhanced Crystal Weapon Seed","points":5,"ss":1,"prefs":[2,2,1,1,3,3,2,4,1,1,1,1,2,2,2,2],"subs":[],"pool":[]},{"id":"B01","board":"4x4","row":1,"col":1,"task":"2m Mining Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,3,1,2,2,2,4,1,1,2],"subs":[],"pool":[]},{"id":"B02","board":"4x4","row":1,"col":2,"task":"Beef (Brutus pet)","points":2,"ss":1,"prefs":[2,4,3,4,4,4,3,2,1,1,1,1,2,1,1,1],"subs":[],"pool":[]},{"id":"B03","board":"4x4","row":1,"col":3,"task":"2 God Trimmed Rune Armor or God D'hide pieces","points":2,"ss":2,"prefs":[2,2,2,2,3,2,3,3,3,1,2,2,1,1,2,1],"subs":[],"pool":[]},{"id":"B04","board":"4x4","row":1,"col":4,"task":"Dragon Ornament Kit","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,3,3,2,2,2,2,1,2,2],"subs":[],"pool":[]},{"id":"B05","board":"4x4","row":2,"col":1,"task":"Obsidian Armor piece","points":2,"ss":1,"prefs":[2,3,2,4,2,2,3,2,1,2,1,2,1,1,1,1],"subs":[],"pool":[]},{"id":"B06","board":"4x4","row":2,"col":2,"task":"Crystal Tool Seed or Zalcano shard","points":5,"ss":1,"prefs":[2,2,1,1,3,2,2,3,2,1,1,2,1,2,3,1],"subs":[],"pool":[]},{"id":"B07","board":"4x4","row":2,"col":3,"task":"Any Elemental Tome","points":1,"ss":1,"prefs":[2,4,1,2,1,3,3,2,1,1,2,2,3,1,2,1],"subs":[],"pool":[]},{"id":"B08","board":"4x4","row":2,"col":4,"task":"2m Fishing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,1,3,1,1,1,2,2,4,1,1,2],"subs":[],"pool":[]},{"id":"B09","board":"4x4","row":3,"col":1,"task":"20 BA Queen kills******","points":4,"ss":20,"prefs":[2,3,1,1,1,1,1,2,2,1,1,2,2,1,1,2],"subs":[],"pool":[]},{"id":"B10","board":"4x4","row":3,"col":2,"task":"2m Sailing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,1,1,2,2,2,4,1,1,2],"subs":[],"pool":[]},{"id":"B11","board":"4x4","row":3,"col":3,"task":"16 Dragon Sheet Pieces","points":2,"ss":16,"prefs":[4,2,2,2,1,3,3,2,3,2,2,2,1,1,4,4],"subs":[],"pool":[]},{"id":"B12","board":"4x4","row":3,"col":4,"task":"Bottled Storm, Dragon Hook, and Dragon Cannon","points":3,"ss":3,"prefs":[4,3,2,3,1,2,3,1,3,1,1,2,2,1,4,4],"subs":[],"pool":[]},{"id":"B13","board":"4x4","row":4,"col":1,"task":"Fletching Knife and Bowstring Spool*******","points":3,"ss":2,"prefs":[1,2,2,3,3,2,3,3,3,1,1,3,1,1,1,2],"subs":[],"pool":[]},{"id":"B14","board":"4x4","row":4,"col":2,"task":"Completed Mix/Match God Book","points":2,"ss":4,"prefs":[2,2,3,2,3,3,3,3,3,2,2,2,1,1,1,1],"subs":[],"pool":[]},{"id":"B15","board":"4x4","row":4,"col":3,"task":"Dragon or Demon Mask","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,4,3,1,2,2,2,1,2,2],"subs":[],"pool":[]},{"id":"B16","board":"4x4","row":4,"col":4,"task":"3 Aranea Boots","points":2,"ss":3,"prefs":[2,3,3,1,3,3,3,1,1,1,1,1,1,1,2,2],"subs":[],"pool":[]}],"ratingKey":{"1":"Like","2":"Neutral","3":"Please no","4":"Can't do","5":"In progress"},"footnotes":{"*":"Raids misc purples include CoX/ToB kits and dust.","**":"2 Oathplate armour pieces, or 900 Oathplate shards.","***":"Any Cerberus crystal counts.","****":"6 different group GM times \u2014 each combo counts once.","*****":"12 GM times across solo-only bosses. Each boss can be done twice.","******":"20 Barbarian Assault Queen kills.","*******":"Fletching knife and bowstring spool."}};
+const RATE = {1:['Like','g'],2:['Neutral',''],3:['Please no','a'],4:["Can't do",'r'],5:['In progress','p']};
+const KEY = 'vengienz-bingo-2026';
+
+/* ---------- state ---------- */
+const blank = () => ({tiles:Object.fromEntries(DATA.tasks.map(t=>[t.id,{done:false,ss:0,by:'',link:'',note:'',subs:[]}]))});
+let S = blank(), view='board', hideDone=false, sortBy='board';
+
+/* storage: artifact store -> localStorage -> memory */
+const store = {
+  async get(){ try{ if(window.storage){const r=await window.storage.get(KEY); return r?JSON.parse(r.value):null;} }catch(e){}
+               try{ const v=localStorage.getItem(KEY); return v?JSON.parse(v):null; }catch(e){ return null; } },
+  async set(v){ const s=JSON.stringify(v);
+               try{ if(window.storage){await window.storage.set(KEY,s); return;} }catch(e){}
+               try{ localStorage.setItem(KEY,s); }catch(e){} }
+};
+const save = () => store.set(S);
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const el = (t,c,h) => { const n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; };
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const byId = id => DATA.tasks.find(t=>t.id===id);
+const boardTasks = k => DATA.tasks.filter(t=>t.board===k);
+
+/* every scoring line: rows, columns and both diagonals on each board.
+   Completing a line doubles it, i.e. pays its point total a second time. */
+const LINES = (()=>{ const out=[];
+  for(const b of DATA.boards){
+    const ts=boardTasks(b.key), n=b.size, at=(r,c)=>ts.find(t=>t.row===r&&t.col===c);
+    for(let r=1;r<=n;r++) out.push({board:b.key,kind:'row',idx:r,label:`Row ${r}`,tiles:ts.filter(t=>t.row===r)});
+    for(let c=1;c<=n;c++) out.push({board:b.key,kind:'col',idx:c,label:`Column ${c}`,tiles:ts.filter(t=>t.col===c)});
+    out.push({board:b.key,kind:'diag',idx:1,label:'Diagonal ↘',tiles:Array.from({length:n},(_,i)=>at(i+1,i+1))});
+    out.push({board:b.key,kind:'diag',idx:2,label:'Diagonal ↗',tiles:Array.from({length:n},(_,i)=>at(i+1,n-i))});
+  }
+  return out.map(l=>({...l,sum:l.tiles.reduce((a,t)=>a+t.points,0),ids:l.tiles.map(t=>t.id)}));
+})();
+const lineDone = l => l.tiles.every(t=>S.tiles[t.id].done);
+const lineFor = (k,kind,idx) => LINES.find(l=>l.board===k&&l.kind===kind&&l.idx===idx);
+const onDiag = id => LINES.some(l=>l.kind==='diag'&&l.ids.includes(id));
+const req = t => (t.pool && t.pool.length) ? t.ss : t.ss;
+const stars = n => (n.match(/\**$/)||[''])[0];
+const clean = n => n.replace(/\*+$/,'').trim();
+
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),1900); }
+
+/* ---------- scoring ---------- */
+function score(){
+  let base=0, maxBase=0, done=0, ss=0, maxSs=0, bonus=0, maxBonus=0, rowsLit=0, rowsTotal=0;
+  for(const t of DATA.tasks){
+    const s=S.tiles[t.id]; maxBase+=t.points; maxSs+=t.ss; ss+=Math.min(s.ss,t.ss);
+    if(s.done){ base+=t.points; done++; }
+  }
+  for(const l of LINES){
+    rowsTotal++; maxBonus+=l.sum;
+    if(lineDone(l)){ bonus+=l.sum; rowsLit++; }
+  }
+  return {base,maxBase,done,total:DATA.tasks.length,ss,maxSs,bonus,maxBonus,
+          pts:base+bonus, maxPts:maxBase+maxBonus, rowsLit, rowsTotal};
+}
+
+/* ---------- prefs ---------- */
+const likers  = t => DATA.players.map((p,i)=>[p.name,t.prefs[i]]).filter(x=>x[1]===1).map(x=>x[0]);
+const blocked = t => t.prefs.filter(v=>v===4).length;
+const rateOf  = (t,name) => { const i=DATA.players.findIndex(p=>p.name===name); return i<0?0:t.prefs[i]; };
+const cands   = t => DATA.players.map((p,i)=>({name:p.name,r:t.prefs[i]}))
+                      .filter(x=>x.r>=1&&x.r<=3).sort((a,b)=>a.r-b.r);
+
+/* ---------- header ---------- */
+function header(){
+  const s=new Date(DATA.event.start+'Z'), e=new Date(DATA.event.end+'Z');
+  const f=d=>d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  $('#window').textContent = `${f(s)} → ${f(e)} · your local time · ${DATA.tasks.length} tiles across two boards`;
+  document.title = `Team 5 · Vengienz Summer Bingo 2026`;
+  $('#bonusInfo').textContent = `Bingo doubles the line · ${LINES.length} lines · ${score().maxPts} pts max`;
+  tick(); setInterval(tick,1000);
+  function tick(){
+    const now=Date.now(), st=s.getTime(), en=e.getTime();
+    let target, label;
+    if(now<st){ target=st; label='Starts in'; }
+    else if(now<en){ target=en; label='Time remaining'; }
+    else { $('#clockLabel').textContent='Event closed'; $('#clock').innerHTML=''; return; }
+    $('#clockLabel').textContent=label;
+    let d=Math.max(0,target-now)/1000;
+    const D=Math.floor(d/86400), H=Math.floor(d%86400/3600), M=Math.floor(d%3600/60), Sc=Math.floor(d%60);
+    $('#clock').innerHTML=[[D,'days'],[H,'hrs'],[M,'min'],[Sc,'sec']]
+      .map(([v,k])=>`<div class="cu"><b>${String(v).padStart(2,'0')}</b><span>${k}</span></div>`).join('');
+  }
+}
+
+/* ---------- strip ---------- */
+function strip(){
+  const x=score();
+  $('#strip').innerHTML=[
+    ['Points earned',`${x.pts}<small> / ${x.maxPts}</small>`, x.pts/x.maxPts, ''],
+    ['Tiles complete',`${x.done}<small> / ${x.total}</small>`, x.done/x.total, 'p'],
+    ['Lines doubled',`${x.rowsLit}<small> / ${x.rowsTotal}</small>`, x.rowsLit/x.rowsTotal, ''],
+    ['Screenshots logged',`${x.ss}<small> / ${x.maxSs}</small>`, x.ss/x.maxSs, 'j']
+  ].map(([k,v,p,c])=>`<div class="stat"><div class="stat-k">${k}</div><div class="stat-v">${v}</div>
+      <div class="bar ${c}"><i style="width:${(p*100).toFixed(1)}%"></i></div></div>`).join('');
+}
+
+/* ---------- board ---------- */
+function boards(){
+  const host=$('#boards'); host.innerHTML='';
+  for(const b of DATA.boards){
+    const ts=boardTasks(b.key), sum=ts.reduce((a,t)=>a+t.points,0);
+    const wrap=el('section','board');
+    wrap.appendChild(el('div','board-head',
+      `<h2>${b.name}</h2><span class="board-meta">${b.size}×${b.size} · ${ts.length} tiles · ${sum} base pts · ${b.size*2+2} lines</span>`));
+    const sc=el('div','scroller'), g=el('div','grid n'+b.size);
+
+    for(let c=1;c<=b.size;c++) g.appendChild(el('div','colhead','col '+c));
+    g.appendChild(el('div','seam head','<span>ROW</span>'));
+
+    for(let r=1;r<=b.size;r++){
+      const row=ts.filter(t=>t.row===r).sort((a,x)=>a.col-x.col);
+      for(const t of row){
+        const s=S.tiles[t.id];
+        if(hideDone && s.done) { g.appendChild(el('div','tile dim','')); continue; }
+        const btn=el('button','tile'+(s.done?' done':'')+(onDiag(t.id)?' ondiag':''));
+        btn.type='button';
+        const prog=t.ss?Math.min(1,s.ss/t.ss):0;
+        const nL=likers(t).length, nB=blocked(t), risky=nL<=2||nB>=8;
+        btn.innerHTML=`
+          ${risky?`<i class="risk" title="${nL} volunteer${nL===1?'':'s'}, ${nB} can't do it"></i>`:''}
+          <div class="tile-top"><span class="tid">${t.id}</span><span class="pts">${t.points}</span></div>
+          <div class="tname">${esc(clean(t.task))}<span style="color:var(--gold)">${stars(t.task)}</span></div>
+          <div class="tfoot">
+            <span class="ss">${s.ss}/${t.ss}</span>
+            <span class="tbar"><i style="width:${(prog*100).toFixed(0)}%"></i></span>
+          </div>
+          ${s.by?`<div class="who">▸ ${esc(s.by)}</div>`:''}`;
+        btn.onclick=()=>openTile(t.id);
+        g.appendChild(btn);
+      }
+      const L=lineFor(b.key,'row',r), doneN=L.tiles.filter(t=>S.tiles[t.id].done).length, lit=doneN===L.tiles.length;
+      const seam=el('div','seam'+(lit?' lit':''));
+      seam.innerHTML=`<div class="fill" style="height:${(doneN/L.tiles.length*100).toFixed(0)}%"></div>
+        <b>+${L.sum}</b><span>${doneN}/${L.tiles.length}</span>`;
+      seam.title=`${L.label}: worth ${L.sum} now — complete it and the whole line pays double (+${L.sum})`;
+      g.appendChild(seam);
+    }
+
+    /* bottom rail: columns pay too */
+    for(let c=1;c<=b.size;c++){
+      const L=lineFor(b.key,'col',c), doneN=L.tiles.filter(t=>S.tiles[t.id].done).length, lit=doneN===L.tiles.length;
+      const cs=el('div','seam h'+(lit?' lit':''));
+      cs.innerHTML=`<div class="fill" style="width:${(doneN/L.tiles.length*100).toFixed(0)}%"></div>
+        <b>+${L.sum}</b><span>${doneN}/${L.tiles.length}</span>`;
+      cs.title=`${L.label}: complete it and the whole line pays double (+${L.sum})`;
+      g.appendChild(cs);
+    }
+    g.appendChild(el('div','seam corner','<span style="font-size:8.5px;color:var(--faint)">COL</span>'));
+
+    sc.appendChild(g);
+
+    /* diagonals */
+    const ds=el('div','diag-strip');
+    for(const idx of [1,2]){
+      const L=lineFor(b.key,'diag',idx), doneN=L.tiles.filter(t=>S.tiles[t.id].done).length, lit=doneN===L.tiles.length;
+      const d=el('div','diag'+(lit?' lit':''));
+      d.innerHTML=`<div class="fill" style="width:${(doneN/L.tiles.length*100).toFixed(0)}%"></div>
+        <em>${L.label}</em><b>+${L.sum}</b><span>${doneN}/${L.tiles.length}</span>`;
+      d.title=`${L.label}: ${L.ids.join(' · ')}`;
+      ds.appendChild(d);
+    }
+    wrap.appendChild(sc); wrap.appendChild(ds); host.appendChild(wrap);
+  }
+}
+
+/* ---------- drawer ---------- */
+let cur=null;
+function openTile(id){
+  cur=id; const t=byId(id), s=S.tiles[id];
+  $('#drId').textContent=`${id} · ${t.board==='6x6'?'PvM Board':'Collector Board'} · row ${t.row}, col ${t.col}`;
+  $('#drName').textContent=clean(t.task);
+  const fn=DATA.footnotes[stars(t.task)];
+  const L=likers(t);
+  $('#drChips').innerHTML=`<span class="chip gold">${t.points} pts</span>
+    <span class="chip">${t.ss} screenshot${t.ss>1?'s':''}</span>
+    <span class="chip ${L.length?'g':'r'}">${L.length} volunteer${L.length===1?'':'s'}</span>
+    ${blocked(t)?`<span class="chip r">${blocked(t)} blocked</span>`:''}`;
+
+  const list = t.pool.length?t.pool:t.subs;
+  const needs = t.ss>1 || t.pool.length;
+  $('#drBody').innerHTML=`
+    ${fn?`<div class="note" style="margin-bottom:16px;border-left:2px solid var(--gold);padding-left:10px">${esc(fn)}</div>`:''}
+    <div class="field">
+      <div class="flabel">Screenshots uploaded</div>
+      <div class="stepper">
+        <button class="step" id="mn">–</button>
+        <span class="stepval mono"><span id="ssv">${s.ss}</span><span style="color:var(--faint);font-size:15px"> / ${t.ss}</span></span>
+        <button class="step" id="pl">+</button>
+        <button class="btn ${s.done?'done':''}" id="tg" style="margin-left:auto">${s.done?'Completed':'Mark complete'}</button>
+      </div>
+    </div>
+    ${needs&&list.length?`<div class="field">
+      <div class="flabel">${t.pool.length?esc(t.poolNote):'Parts logged'}</div>
+      <div class="subgrid" id="subs">${list.map(n=>
+        `<button class="sub${s.subs.includes(n)?' on':''}" data-n="${esc(n)}"><i class="box"></i>${esc(n)}</button>`).join('')}</div>
+    </div>`:''}
+    <div class="field"><div class="flabel">Completed by</div>
+      <select id="by"><option value="">— unassigned —</option>
+        ${DATA.players.map(p=>{const r=rateOf(t,p.name);
+          return `<option value="${esc(p.name)}"${s.by===p.name?' selected':''}>${esc(p.name)}${r?` · ${RATE[r][0]}`:''}</option>`}).join('')}
+      </select></div>
+    <div class="field"><div class="flabel">Evidence link</div>
+      <input type="url" id="link" placeholder="Discord message or imgur link" value="${esc(s.link)}"></div>
+    <div class="field"><div class="flabel">Notes</div>
+      <textarea id="note" placeholder="Anything the verifier should know">${esc(s.note)}</textarea></div>
+    <div class="field"><div class="flabel">Lines this tile sits on</div>
+      <div class="chips">${LINES.filter(l=>l.ids.includes(t.id)).map(l=>{
+        const dn=l.tiles.filter(x=>S.tiles[x.id].done).length, done=dn===l.tiles.length;
+        return `<span class="chip ${done?'gold':''}">${l.label} · ${dn}/${l.tiles.length} · +${l.sum}</span>`}).join('')}</div>
+      <div class="note" style="margin-top:7px">Finishing any of these doubles that line's points.</div></div>
+    <div class="field"><div class="flabel">Who wants this tile</div>
+      <div class="chips">${cands(t).length?cands(t).map(c=>
+        `<span class="chip ${RATE[c.r][1]}">${esc(c.name)}</span>`).join(''):'<span class="note">Nobody rated this above “please no”.</span>'}</div></div>`;
+
+  const upd=()=>{ $('#ssv').textContent=s.ss; $('#mn').disabled=s.ss<=0; $('#pl').disabled=s.ss>=t.ss;
+                  $('#tg').className='btn'+(s.done?' done':''); $('#tg').textContent=s.done?'Completed':'Mark complete';
+                  save(); strip(); boards(); if(view==='draft')draft(); };
+  $('#mn').onclick=()=>{ s.ss=Math.max(0,s.ss-1); upd(); };
+  $('#pl').onclick=()=>{ s.ss=Math.min(t.ss,s.ss+1); if(s.ss===t.ss)s.done=true; upd(); };
+  $('#tg').onclick=()=>{ s.done=!s.done; if(s.done)s.ss=t.ss; upd(); };
+  $('#by').onchange=e=>{ s.by=e.target.value; upd(); };
+  $('#link').oninput=e=>{ s.link=e.target.value; save(); };
+  $('#note').oninput=e=>{ s.note=e.target.value; save(); };
+  if($('#subs')) $('#subs').onclick=e=>{ const b=e.target.closest('.sub'); if(!b)return;
+    const n=b.dataset.n, i=s.subs.indexOf(n);
+    i<0?s.subs.push(n):s.subs.splice(i,1);
+    b.classList.toggle('on',i<0);
+    s.ss=Math.min(t.ss,s.subs.length); if(s.ss===t.ss)s.done=true; upd(); };
+  $('#mn').disabled=s.ss<=0; $('#pl').disabled=s.ss>=t.ss;
+  $('#drawer').classList.add('on'); $('#scrim').classList.add('on'); $('#drawer').setAttribute('aria-hidden','false');
+}
+function closeDr(){ $('#drawer').classList.remove('on'); $('#scrim').classList.remove('on'); $('#drawer').setAttribute('aria-hidden','true'); }
+
+/* ---------- draft ---------- */
+function draft(){
+  const rows=DATA.tasks.map(t=>({t,L:likers(t),B:blocked(t)}));
+  $('#riskTbl').innerHTML=rows.slice().sort((a,b)=>a.L.length-b.L.length||b.B-a.B||b.t.points-a.t.points).slice(0,10)
+    .map(({t,L,B})=>`<tr><td>${esc(clean(t.task))}</td><td class="num">${t.points}</td>
+      <td class="num" style="color:${L.length?'var(--jade)':'var(--rust)'}">${L.length}</td>
+      <td class="num" style="color:${B>3?'var(--rust)':'var(--muted)'}">${B}</td></tr>`).join('');
+
+  const load={}; DATA.players.forEach(p=>load[p.name]={n:0,pts:0,fit:{1:0,2:0,3:0,4:0}});
+  DATA.tasks.forEach(t=>{ const by=S.tiles[t.id].by; if(by&&load[by]){ load[by].n++; load[by].pts+=t.points;
+    const r=rateOf(t,by); if(r>=1&&r<=4)load[by].fit[r]++; }});
+  const mx=Math.max(1,...Object.values(load).map(v=>v.n));
+  $('#loadTbl').innerHTML=DATA.players.map(p=>{const v=load[p.name];
+    return `<tr><td>${esc(p.name)}</td>
+      <td class="num"><span class="load"><span class="loadbar"><i style="width:${v.n/mx*100}%"></i></span>${v.n}</span></td>
+      <td class="num">${v.pts}</td>
+      <td>${v.n?`<span class="chip g">${v.fit[1]} like</span> ${v.fit[3]+v.fit[4]?`<span class="chip r">${v.fit[3]+v.fit[4]} reluctant</span>`:''}`:'<span class="note">—</span>'}</td></tr>`}).join('');
+
+  const ln=LINES.map(l=>{const left=l.tiles.filter(t=>!S.tiles[t.id].done);
+      return {l,left,rate:left.length?l.sum/left.length:Infinity}})
+    .sort((a,b)=>(b.left.length===0)-(a.left.length===0)||b.rate-a.rate||b.l.sum-a.l.sum);
+  $('#lineTbl').innerHTML=ln.slice(0,12).map(({l,left,rate})=>{
+    const bn=DATA.boards.find(b=>b.key===l.board).name;
+    return `<tr><td>${l.left===0?'':''}${esc(l.label)}</td><td class="note">${esc(bn)}</td>
+      <td class="num" style="color:var(--gold)">+${l.sum}</td>
+      <td class="num">${left.length}</td>
+      <td class="num">${left.length?rate.toFixed(1):'<span class="chip gold">doubled</span>'}</td>
+      <td><div class="chips">${left.slice(0,4).map(t=>{const by=S.tiles[t.id].by;
+        return `<span class="chip ${by?'p':''}" title="${esc(clean(t.task))}">${t.id}${by?' · '+esc(by):''}</span>`}).join('')}${left.length>4?`<span class="chip">+${left.length-4}</span>`:''}</div></td></tr>`}).join('');
+
+  $('#draftTbl').innerHTML=rows.map(({t,L})=>{const s=S.tiles[t.id];
+    return `<tr><td>${esc(clean(t.task))} <span class="tid mono">${t.id}</span></td>
+      <td class="num">${t.points}</td><td class="num">${t.ss}</td>
+      <td>${s.by?`<span class="chip p">${esc(s.by)}</span>`:'<span class="note">—</span>'}</td>
+      <td><div class="chips">${cands(t).slice(0,5).map(c=>`<span class="chip ${RATE[c.r][1]}">${esc(c.name)}</span>`).join('')||'<span class="note">no volunteers</span>'}</div></td></tr>`}).join('');
+}
+
+function suggest(){
+  const load={}; DATA.players.forEach(p=>load[p.name]=0);
+  DATA.tasks.forEach(t=>{const by=S.tiles[t.id].by; if(by&&load[by]!==undefined)load[by]++;});
+  const open=DATA.tasks.filter(t=>!S.tiles[t.id].by)
+    .sort((a,b)=>likers(a).length-likers(b).length || b.points-a.points);
+  let n=0;
+  for(const t of open){
+    const c=cands(t); if(!c.length) continue;
+    const best=c.reduce((a,x)=> (x.r<a.r || (x.r===a.r && load[x.name]<load[a.name])) ? x : a);
+    S.tiles[t.id].by=best.name; load[best.name]++; n++;
+  }
+  save(); boards(); draft();
+  toast(n?`Assigned ${n} tile${n===1?'':'s'}`:'Every tile already has someone');
+}
+
+/* ---------- roster ---------- */
+function roster(){
+  let ts=DATA.tasks.slice();
+  if(sortBy==='scarce') ts.sort((a,b)=>likers(a).length-likers(b).length||b.points-a.points);
+  if(sortBy==='pts')    ts.sort((a,b)=>b.points-a.points);
+  const head=`<thead><tr><th class="corner">Tile / player</th>
+    ${DATA.players.map(p=>`<th><span class="vname">${esc(p.name)}</span></th>`).join('')}</tr></thead>`;
+  const body=`<tbody>${ts.map(t=>`<tr><th>${esc(clean(t.task))}
+      <span class="mono" style="color:var(--faint);font-size:10px"> ${t.id} · ${t.points}p</span></th>
+    ${t.prefs.map((v,i)=>`<td class="cell r${v}" title="${esc(DATA.players[i].name)} — ${RATE[v]?RATE[v][0]:'no rating'}">${v||''}</td>`).join('')}
+    </tr>`).join('')}</tbody>`;
+  $('#heat').innerHTML=head+body;
+}
+
+/* ---------- tabs & io ---------- */
+function show(v){
+  view=v;
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v));
+  ['board','draft','roster'].forEach(k=>$('#v-'+k).hidden = k!==v);
+  if(v==='draft')draft(); if(v==='roster')roster();
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>show(b.dataset.view));
+$('#scrim').onclick=closeDr; $('#drClose').onclick=closeDr;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeDr(); });
+$('#fToggle').onclick=e=>{ hideDone=!hideDone; e.target.textContent=hideDone?'Show completed':'Hide completed'; boards(); };
+$('#sortBy').onchange=e=>{ sortBy=e.target.value; roster(); };
+$('#suggest').onclick=suggest;
+$('#clearAssign').onclick=()=>{ DATA.tasks.forEach(t=>S.tiles[t.id].by=''); save(); boards(); draft(); toast('Assignments cleared'); };
+
+$('#exp').onclick=()=>{
+  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=el('a'); a.href=URL.createObjectURL(b); a.download='vengienz-bingo-progress.json'; a.click();
+  URL.revokeObjectURL(a.href); toast('Progress exported');
+};
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ const j=JSON.parse(r.result); if(!j.tiles)throw 0;
+      S=blank(); Object.keys(j.tiles).forEach(k=>{ if(S.tiles[k]) Object.assign(S.tiles[k],j.tiles[k]); });
+      save(); strip(); boards(); if(view==='draft')draft(); toast('Progress imported');
+    }catch(err){ toast("That file isn't a progress export"); } };
+  r.readAsText(f); e.target.value=''; };
+$('#tsv').onclick=()=>{
+  const out=['ID\tTask\tCompleted By\tEvidence Links\tComplete\tNotes']
+    .concat(DATA.tasks.map(t=>{const s=S.tiles[t.id];
+      return [t.id,t.task,s.by,s.link,s.done?'TRUE':'FALSE',s.note.replace(/\s+/g,' ')].join('\t')})).join('\n');
+  navigator.clipboard.writeText(out).then(()=>toast('Copied — paste into the Tasks tab'),
+    ()=>toast('Clipboard blocked — use Export JSON instead'));
+};
+$('#reset').onclick=()=>{ if(!confirm('Clear all progress and assignments? This cannot be undone.'))return;
+  S=blank(); save(); strip(); boards(); draft(); toast('Board reset'); };
+
+/* ---------- boot ---------- */
+(async()=>{
+  const saved=await store.get();
+  if(saved&&saved.tiles) Object.keys(saved.tiles).forEach(k=>{ if(S.tiles[k]) Object.assign(S.tiles[k],saved.tiles[k]); });
+  header(); strip(); boards(); show('board');
+})();
+</script>
+</body>
+</html>
