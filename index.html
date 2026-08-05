@@ -315,6 +315,25 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .loadbar{width:78px;height:4px;background:var(--raise2);border-radius:2px;overflow:hidden}
 .loadbar i{display:block;height:100%;background:var(--purple)}
 
+/* ---------- multi-tile breakdown ---------- */
+.mt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.mt{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 16px;text-align:left;width:100%;transition:border-color .15s}
+.mt:hover{border-color:var(--gold)}
+.mt.done{background:var(--ok-bg);border-color:var(--ok-bd)}
+.mt.active{background:var(--warn-bg);border-color:var(--warn-bd)}
+.mt.none{background:var(--bad-bg);border-color:var(--bad-bd);border-style:dashed}
+.mt-head{display:flex;align-items:baseline;gap:9px;margin-bottom:3px}
+.mt-name{font-size:15.5px;font-weight:500;color:var(--text);flex:1;line-height:1.3}
+.mt-count{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13.5px;color:var(--gold)}
+.mt-alt{font-size:13px;color:var(--muted);margin:8px 0 2px;border-left:2px solid var(--line2);
+  padding-left:9px;line-height:1.45}
+.mt-list{display:flex;flex-direction:column;gap:2px;margin-top:9px}
+.mt-row{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;align-items:baseline;font-size:13.5px}
+.mt-tick{font-family:"IBM Plex Mono",monospace;font-weight:600}
+.mt-row.got{color:var(--text)} .mt-row.got .mt-tick{color:var(--ok)}
+.mt-row.want{color:var(--muted)} .mt-row.want .mt-tick{color:var(--faint)}
+
 /* ---------- sync / bin state ---------- */
 .sync{font-size:12px;color:var(--faint);letter-spacing:.06em;white-space:nowrap}
 .btn.on{border-color:var(--gold);color:var(--gold);background:rgba(255,196,79,.10)}
@@ -376,6 +395,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" data-view="board">Board</button>
     <button class="tab" role="tab" aria-selected="false" data-view="draft">Draft</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="multi">Multi-tile</button>
     <button class="tab" role="tab" aria-selected="false" data-view="roster">Roster</button>
   </div>
 
@@ -414,18 +434,34 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
     </div>
     <div class="panel" style="margin-bottom:16px">
       <h3>Line priority</h3>
-      <div class="note" style="margin-bottom:10px">Cheapest doublings first - most bonus per tile still to do.</div>
-      <table><thead><tr><th>Line</th><th>Board</th><th class="num">Bonus</th><th class="num">Left</th><th class="num">Pts / tile left</th><th>Outstanding</th></tr></thead><tbody id="lineTbl"></tbody></table>
+      <div class="note" style="margin-bottom:10px">Finish a line and it pays its points a second time.
+        Cheapest doublings first: a <b>+17</b> line with <b>2</b> tiles left works out at <b>+8.5</b> of bonus
+        per tile you finish, so it beats a +20 line needing 5.</div>
+      <table><thead><tr>
+        <th>Line</th><th>Board</th>
+        <th class="num" title="What the line pays again once every tile on it is done">Bonus</th>
+        <th class="num" title="Tiles on this line still not verified">Tiles left</th>
+        <th class="num" title="Bonus divided by tiles left - how much bonus each remaining tile unlocks">Bonus per tile</th>
+        <th>Outstanding</th></tr></thead><tbody id="lineTbl"></tbody></table>
     </div>
     <div class="panel" style="margin-bottom:16px">
       <h3>Upcoming sessions</h3>
       <div class="note" style="margin-bottom:10px">Click a row to open the tile and join.</div>
-      <table><thead><tr><th>When</th><th>Tile</th><th>Host</th><th class="num">In</th><th>Who's coming</th></tr></thead><tbody id="sessTbl"></tbody></table>
+      <table><thead><tr><th>When</th><th>Tile</th><th>Host</th><th>Who's coming</th><th>Note</th></tr></thead><tbody id="sessTbl"></tbody></table>
     </div>
     <div class="panel">
       <h3>Every tile</h3>
       <table><thead><tr><th>Tile</th><th class="num">Pts</th><th class="num">SS</th><th>Assigned</th><th>Best candidates</th></tr></thead><tbody id="draftTbl"></tbody></table>
     </div>
+  </section>
+
+  <!-- MULTI-TILE -->
+  <section class="view" id="v-multi" hidden>
+    <div class="toolbar">
+      <button class="btn" id="mtToggle">Hide finished</button>
+      <span class="note" id="mtSummary"></span>
+    </div>
+    <div class="mt-grid" id="mtGrid"></div>
   </section>
 
   <!-- ROSTER -->
@@ -471,7 +507,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 /* Offline fallback only. The database is the source of truth; this snapshot is
    used solely when there is no cached copy AND the fetch fails, so the page never
    renders blank. Safe to delete if you'd rather show an error in that case. */
-const SEED = {"event":{"name":"Vengienz Summer Bingo 2026","start":"2026-08-07T17:00:00","end":"2026-08-16T17:00:00","rowMult":2,"colMult":0},"boards":[{"key":"6x6","name":"PvM Board","size":6},{"key":"4x4","name":"Collector Board","size":4}],"players":[{"name":"GA1","discord":"GA1/Gim Ga1","wom":"Gim Ga1"},{"name":"Napsuttaja","discord":"Napsuttaja | anti","wom":"Napsuttaja"},{"name":"oKsirf","discord":"oKsirf","wom":"oKsirf"},{"name":"Diebels","discord":"Diebels","wom":"Diebels"},{"name":"MrBapparappa","discord":"MrBapparappa","wom":"MrBapparappa"},{"name":"Splazzoid","discord":"Splazzoid","wom":"Splazzoid"},{"name":"cefax","discord":"cefax","wom":"cefax"},{"name":"Zaphir","discord":"Zaphir","wom":"Zaphir"},{"name":"TuhmaTuma","discord":"TuhmaTuma","wom":"TuhmaTuma"},{"name":"Numquam Quit","discord":"Numquam Quit","wom":"Numquam Quit"},{"name":"710 710 710","discord":"710 710 710","wom":"710 710 710"},{"name":"ClimberAZ","discord":"ClimberAZ","wom":"ClimberAZ"},{"name":"Schysstkuk","discord":"Schysstkuk","wom":"Schysstkuk"},{"name":"Dry Stink","discord":"Dry Stink","wom":"Dry Stink"},{"name":"Erenglodill","discord":"Erenglodill","wom":"Erenglodill"},{"name":"Ehren Mann","discord":"Ehren Mann","wom":"Ehren Mann"}],"tasks":[{"id":"A01","board":"6x6","row":1,"col":1,"task":"3 Raids armor pieces","points":4,"ss":3,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[]},{"id":"A02","board":"6x6","row":1,"col":2,"task":"Any Dragonbane Weapon","points":2,"ss":1,"prefs":[1,1,1,2,1,1,2,1,1,1,1,2,1,2,2,1],"subs":[],"pool":[]},{"id":"A03","board":"6x6","row":1,"col":3,"task":"Dragon Harpoon or Dragon Pick","points":1,"ss":1,"prefs":[2,2,2,2,3,1,2,2,2,1,1,2,1,1,2,1],"subs":[],"pool":[]},{"id":"A04","board":"6x6","row":1,"col":4,"task":"Completed Rupture","points":3,"ss":3,"prefs":[2,4,2,1,3,3,2,2,3,1,1,1,1,2,2,2],"subs":["Onyx","Zenyte","Fang"],"pool":[]},{"id":"A05","board":"6x6","row":1,"col":5,"task":"Completed Venator Bow","points":5,"ss":5,"prefs":[1,2,3,3,2,3,2,3,1,1,1,1,2,2,2,2],"subs":[],"pool":[]},{"id":"A06","board":"6x6","row":1,"col":6,"task":"3 Zenyte Shards","points":2,"ss":3,"prefs":[2,1,2,2,2,3,3,2,1,1,2,2,1,1,1,1],"subs":[],"pool":[]},{"id":"A07","board":"6x6","row":2,"col":1,"task":"Mix/Match Moons set","points":1,"ss":4,"prefs":[1,2,2,3,1,2,2,3,2,1,1,2,1,1,1,1],"subs":[],"pool":[]},{"id":"A08","board":"6x6","row":2,"col":2,"task":"2 Inferno GM speed runs or 4 Colo GM speed runs","points":5,"ss":4,"prefs":[4,1,1,4,3,2,1,2,4,4,4,4,4,4,4,4],"subs":[],"pool":[]},{"id":"A09","board":"6x6","row":2,"col":3,"task":"Nightmare Unique","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,2,1,2,2,2],"subs":[],"pool":[]},{"id":"A10","board":"6x6","row":2,"col":4,"task":"4 Blood Shards","points":2,"ss":4,"prefs":[1,3,2,1,3,2,2,2,1,1,1,2,1,1,1,1],"subs":[],"pool":[]},{"id":"A11","board":"6x6","row":2,"col":5,"task":"Raids Weapon","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[]},{"id":"A12","board":"6x6","row":2,"col":6,"task":"Dragon WarHammer","points":5,"ss":1,"prefs":[2,3,3,3,4,3,2,4,2,2,3,3,2,1,3,2],"subs":[],"pool":[]},{"id":"A13","board":"6x6","row":3,"col":1,"task":"2 Colosseum Uniques","points":3,"ss":2,"prefs":[2,1,2,1,1,2,1,2,3,1,1,4,3,2,4,1],"subs":[],"pool":[]},{"id":"A14","board":"6x6","row":3,"col":2,"task":"Twinflame Staff","points":2,"ss":2,"prefs":[1,2,1,3,1,2,2,2,1,3,1,1,1,1,1,1],"subs":[],"pool":[]},{"id":"A15","board":"6x6","row":3,"col":3,"task":"All 4 Dk Rings","points":1,"ss":4,"prefs":[2,2,2,2,1,3,2,1,3,1,1,2,2,1,2,1],"subs":[],"pool":[]},{"id":"A16","board":"6x6","row":3,"col":4,"task":"6 Unique Group GM time****","points":5,"ss":6,"prefs":[1,1,1,1,1,1,1,1,1,2,2,2,3,2,3,3],"subs":[],"pool":["Huey","Nightmare","Tob Duo","Tob 3 Man","Tob 4 Man","Tob 5 Man","HMT 3 Man","HMT 4 Man","HMT 5 Man","Chambers Trio","Chambers 5-Man","CM Trio","CM 5-Man","Tombs Speed Runner 2","Yama"],"poolNote":"Pick any 6 distinct combos","poolMax":1},{"id":"A17","board":"6x6","row":3,"col":5,"task":"Any Boss Jar","points":2,"ss":1,"prefs":[2,2,2,1,3,2,2,2,1,1,1,1,1,1,2,1],"subs":[],"pool":[]},{"id":"A18","board":"6x6","row":3,"col":6,"task":"Completed God Sword","points":3,"ss":4,"prefs":[2,2,2,2,1,3,2,1,1,1,1,2,1,1,3,2],"subs":[],"pool":[]},{"id":"A19","board":"6x6","row":4,"col":1,"task":"Completed Tenacle Whip","points":1,"ss":2,"prefs":[2,3,3,3,3,2,2,2,2,1,1,2,2,1,1,1],"subs":[],"pool":[]},{"id":"A20","board":"6x6","row":4,"col":2,"task":"Raids Off-hand","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[]},{"id":"A21","board":"6x6","row":4,"col":3,"task":"Completed Confliction Gaunlets","points":3,"ss":3,"prefs":[1,1,2,1,2,2,2,3,1,1,1,1,2,2,3,2],"subs":[],"pool":[]},{"id":"A22","board":"6x6","row":4,"col":4,"task":"Mix/Match barrow set","points":1,"ss":4,"prefs":[1,2,1,4,1,1,2,2,1,1,1,2,1,1,1,1],"subs":[],"pool":[]},{"id":"A23","board":"6x6","row":4,"col":5,"task":"Completed Rancor or Nally","points":3,"ss":3,"prefs":[2,2,3,3,2,1,2,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[]},{"id":"A24","board":"6x6","row":4,"col":6,"task":"Any Cerb Crystal***","points":2,"ss":1,"prefs":[2,1,3,1,2,2,2,3,3,1,1,2,1,1,2,1],"subs":[],"pool":[]},{"id":"A25","board":"6x6","row":5,"col":1,"task":"12 GM times for Solo-Only Bosses*****","points":5,"ss":12,"prefs":[1,1,1,1,1,2,1,1,4,4,1,2,2,2,4,2],"subs":[],"pool":["Alchemical Hydra","Corrupted Gauntlet","Gauntlet","Zulrah","Phosani's Nightmare","Phantom Muspah","Duke Sucellus","Vardorvis","Leviathan","Araxxor","Gargoyles","Doom Racer","Inferno","Colo","Fight Caves"],"poolNote":"12 times total — each boss may be used twice","poolMax":2},{"id":"A26","board":"6x6","row":5,"col":2,"task":"Voidwaker piece","points":3,"ss":1,"prefs":[1,2,3,2,2,3,2,4,3,1,1,3,1,1,3,3],"subs":[],"pool":[]},{"id":"A27","board":"6x6","row":5,"col":3,"task":"2 Raids Misc Purple (including Cox/TOB Kits and Dust)*","points":2,"ss":2,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[]},{"id":"A28","board":"6x6","row":5,"col":4,"task":"3 Uncut Onyx or Onyx (Tekton)","points":3,"ss":3,"prefs":[2,2,2,1,3,1,1,2,1,1,1,2,1,2,1,1],"subs":[],"pool":[]},{"id":"A29","board":"6x6","row":5,"col":5,"task":"Completed Blessed Spirit Shield or Sigil","points":4,"ss":2,"prefs":[4,3,2,2,2,3,2,1,1,4,1,3,1,1,1,1],"subs":[],"pool":[]},{"id":"A30","board":"6x6","row":5,"col":6,"task":"2 Tormented Demons Uniques","points":3,"ss":2,"prefs":[2,3,2,3,2,3,3,2,3,3,1,2,1,2,1,1],"subs":[],"pool":[]},{"id":"A31","board":"6x6","row":6,"col":1,"task":"2 Oathplate Armor piece or 900 Oathplate Shards**","points":3,"ss":2,"prefs":[1,2,2,1,2,1,1,1,2,1,1,2,2,2,4,2],"subs":[],"pool":[]},{"id":"A32","board":"6x6","row":6,"col":2,"task":"Jar of Light","points":1,"ss":1,"prefs":[2,1,1,1,3,2,2,2,2,2,2,1,2,1,4,1],"subs":[],"pool":[]},{"id":"A33","board":"6x6","row":6,"col":3,"task":"3 Virtus or SRA Pieces","points":5,"ss":3,"prefs":[2,1,1,1,1,3,1,3,1,1,1,1,1,1,2,1],"subs":[],"pool":[]},{"id":"A34","board":"6x6","row":6,"col":4,"task":"Nex Unique (Pet doesn't count)","points":3,"ss":1,"prefs":[1,1,1,3,1,2,1,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[]},{"id":"A35","board":"6x6","row":6,"col":5,"task":"3 Brimstone Ring Pieces","points":3,"ss":3,"prefs":[2,3,2,4,3,2,2,3,3,4,1,1,2,1,2,4],"subs":[],"pool":[]},{"id":"A36","board":"6x6","row":6,"col":6,"task":"Enhanced Crystal Weapon Seed","points":5,"ss":1,"prefs":[2,2,1,1,3,3,2,4,1,1,1,1,2,2,2,2],"subs":[],"pool":[]},{"id":"B01","board":"4x4","row":1,"col":1,"task":"2m Mining Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,3,1,2,2,2,4,1,1,2],"subs":[],"pool":[]},{"id":"B02","board":"4x4","row":1,"col":2,"task":"Beef (Brutus pet)","points":2,"ss":1,"prefs":[2,4,3,4,4,4,3,2,1,1,1,1,2,1,1,1],"subs":[],"pool":[]},{"id":"B03","board":"4x4","row":1,"col":3,"task":"2 God Trimmed Rune Armor or God D'hide pieces","points":2,"ss":2,"prefs":[2,2,2,2,3,2,3,3,3,1,2,2,1,1,2,1],"subs":[],"pool":[]},{"id":"B04","board":"4x4","row":1,"col":4,"task":"Dragon Ornament Kit","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,3,3,2,2,2,2,1,2,2],"subs":[],"pool":[]},{"id":"B05","board":"4x4","row":2,"col":1,"task":"Obsidian Armor piece","points":2,"ss":1,"prefs":[2,3,2,4,2,2,3,2,1,2,1,2,1,1,1,1],"subs":[],"pool":[]},{"id":"B06","board":"4x4","row":2,"col":2,"task":"Crystal Tool Seed or Zalcano shard","points":5,"ss":1,"prefs":[2,2,1,1,3,2,2,3,2,1,1,2,1,2,3,1],"subs":[],"pool":[]},{"id":"B07","board":"4x4","row":2,"col":3,"task":"Any Elemental Tome","points":1,"ss":1,"prefs":[2,4,1,2,1,3,3,2,1,1,2,2,3,1,2,1],"subs":[],"pool":[]},{"id":"B08","board":"4x4","row":2,"col":4,"task":"2m Fishing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,1,3,1,1,1,2,2,4,1,1,2],"subs":[],"pool":[]},{"id":"B09","board":"4x4","row":3,"col":1,"task":"20 BA Queen kills******","points":4,"ss":20,"prefs":[2,3,1,1,1,1,1,2,2,1,1,2,2,1,1,2],"subs":[],"pool":[]},{"id":"B10","board":"4x4","row":3,"col":2,"task":"2m Sailing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,1,1,2,2,2,4,1,1,2],"subs":[],"pool":[]},{"id":"B11","board":"4x4","row":3,"col":3,"task":"16 Dragon Sheet Pieces","points":2,"ss":16,"prefs":[4,2,2,2,1,3,3,2,3,2,2,2,1,1,4,4],"subs":[],"pool":[]},{"id":"B12","board":"4x4","row":3,"col":4,"task":"Bottled Storm, Dragon Hook, and Dragon Cannon","points":3,"ss":3,"prefs":[4,3,2,3,1,2,3,1,3,1,1,2,2,1,4,4],"subs":[],"pool":[]},{"id":"B13","board":"4x4","row":4,"col":1,"task":"Fletching Knife and Bowstring Spool*******","points":3,"ss":2,"prefs":[1,2,2,3,3,2,3,3,3,1,1,3,1,1,1,2],"subs":[],"pool":[]},{"id":"B14","board":"4x4","row":4,"col":2,"task":"Completed Mix/Match God Book","points":2,"ss":4,"prefs":[2,2,3,2,3,3,3,3,3,2,2,2,1,1,1,1],"subs":[],"pool":[]},{"id":"B15","board":"4x4","row":4,"col":3,"task":"Dragon or Demon Mask","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,4,3,1,2,2,2,1,2,2],"subs":[],"pool":[]},{"id":"B16","board":"4x4","row":4,"col":4,"task":"3 Aranea Boots","points":2,"ss":3,"prefs":[2,3,3,1,3,3,3,1,1,1,1,1,1,1,2,2],"subs":[],"pool":[]}],"ratingKey":{"1":"Like","2":"Neutral","3":"Please no","4":"Can't do","5":"In progress"},"footnotes":{"*":"Raids misc purples include CoX/ToB kits and dust.","**":"2 Oathplate armour pieces, or 900 Oathplate shards.","***":"Any Cerberus crystal counts.","****":"6 different group GM times — each combo counts once.","*****":"12 GM times across solo-only bosses. Each boss can be done twice.","******":"20 Barbarian Assault Queen kills.","*******":"Fletching knife and bowstring spool."}};
+const SEED = {"event":{"name":"Vengienz Summer Bingo 2026","start":"2026-08-07T17:00:00","end":"2026-08-16T17:00:00","rowMult":2,"colMult":0},"boards":[{"key":"6x6","name":"PvM Board","size":6},{"key":"4x4","name":"Collector Board","size":4}],"players":[{"name":"GA1","discord":"GA1/Gim Ga1","wom":"Gim Ga1"},{"name":"Napsuttaja","discord":"Napsuttaja | anti","wom":"Napsuttaja"},{"name":"oKsirf","discord":"oKsirf","wom":"oKsirf"},{"name":"Diebels","discord":"Diebels","wom":"Diebels"},{"name":"MrBapparappa","discord":"MrBapparappa","wom":"MrBapparappa"},{"name":"Splazzoid","discord":"Splazzoid","wom":"Splazzoid"},{"name":"cefax","discord":"cefax","wom":"cefax"},{"name":"Zaphir","discord":"Zaphir","wom":"Zaphir"},{"name":"TuhmaTuma","discord":"TuhmaTuma","wom":"TuhmaTuma"},{"name":"Numquam Quit","discord":"Numquam Quit","wom":"Numquam Quit"},{"name":"710 710 710","discord":"710 710 710","wom":"710 710 710"},{"name":"ClimberAZ","discord":"ClimberAZ","wom":"ClimberAZ"},{"name":"Schysstkuk","discord":"Schysstkuk","wom":"Schysstkuk"},{"name":"Dry Stink","discord":"Dry Stink","wom":"Dry Stink"},{"name":"Erenglodill","discord":"Erenglodill","wom":"Erenglodill"},{"name":"Ehren Mann","discord":"Ehren Mann","wom":"Ehren Mann"}],"tasks":[{"id":"A01","board":"6x6","row":1,"col":1,"task":"3 Raids armor pieces","points":4,"ss":3,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A02","board":"6x6","row":1,"col":2,"task":"Any Dragonbane Weapon","points":2,"ss":1,"prefs":[1,1,1,2,1,1,2,1,1,1,1,2,1,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A03","board":"6x6","row":1,"col":3,"task":"Dragon Harpoon or Dragon Pick","points":1,"ss":1,"prefs":[2,2,2,2,3,1,2,2,2,1,1,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A04","board":"6x6","row":1,"col":4,"task":"Completed Rupture","points":3,"ss":3,"prefs":[2,4,2,1,3,3,2,2,3,1,1,1,1,2,2,2],"subs":["Onyx","Zenyte","Fang"],"pool":[],"alts":[]},{"id":"A05","board":"6x6","row":1,"col":5,"task":"Completed Venator Bow","points":5,"ss":5,"prefs":[1,2,3,3,2,3,2,3,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A06","board":"6x6","row":1,"col":6,"task":"3 Zenyte Shards","points":2,"ss":3,"prefs":[2,1,2,2,2,3,3,2,1,1,2,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A07","board":"6x6","row":2,"col":1,"task":"Mix/Match Moons set","points":1,"ss":4,"prefs":[1,2,2,3,1,2,2,3,2,1,1,2,1,1,1,1],"subs":["Helm","Top","Bottom","Weapon"],"pool":[],"alts":[]},{"id":"A08","board":"6x6","row":2,"col":2,"task":"2 Inferno GM speed runs or 4 Colo GM speed runs","points":5,"ss":4,"prefs":[4,1,1,4,3,2,1,2,4,4,4,4,4,4,4,4],"subs":[],"pool":[],"alts":[{"label":"2 Inferno GM speeds","parts":["Inferno GM speed","Inferno GM speed"]},{"label":"4 Colo GM speeds","parts":["Colo GM speed","Colo GM speed","Colo GM speed","Colo GM speed"]}]},{"id":"A09","board":"6x6","row":2,"col":3,"task":"Nightmare Unique","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,2,1,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A10","board":"6x6","row":2,"col":4,"task":"4 Blood Shards","points":2,"ss":4,"prefs":[1,3,2,1,3,2,2,2,1,1,1,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A11","board":"6x6","row":2,"col":5,"task":"Raids Weapon","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A12","board":"6x6","row":2,"col":6,"task":"Dragon WarHammer","points":5,"ss":1,"prefs":[2,3,3,3,4,3,2,4,2,2,3,3,2,1,3,2],"subs":[],"pool":[],"alts":[]},{"id":"A13","board":"6x6","row":3,"col":1,"task":"2 Colosseum Uniques","points":3,"ss":2,"prefs":[2,1,2,1,1,2,1,2,3,1,1,4,3,2,4,1],"subs":[],"pool":[],"alts":[]},{"id":"A14","board":"6x6","row":3,"col":2,"task":"Twinflame Staff","points":2,"ss":2,"prefs":[1,2,1,3,1,2,2,2,1,3,1,1,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A15","board":"6x6","row":3,"col":3,"task":"All 4 Dk Rings","points":1,"ss":4,"prefs":[2,2,2,2,1,3,2,1,3,1,1,2,2,1,2,1],"subs":["Berserker Ring","Warrior Ring","Archers Ring","Seers Ring"],"pool":[],"alts":[]},{"id":"A16","board":"6x6","row":3,"col":4,"task":"6 Unique Group GM time****","points":5,"ss":6,"prefs":[1,1,1,1,1,1,1,1,1,2,2,2,3,2,3,3],"subs":[],"pool":["Huey","Nightmare","Tob Duo","Tob 3 Man","Tob 4 Man","Tob 5 Man","HMT 3 Man","HMT 4 Man","HMT 5 Man","Chambers Trio","Chambers 5-Man","CM Trio","CM 5-Man","Tombs Speed Runner 2","Yama"],"poolNote":"Pick any 6 distinct combos","poolMax":1,"alts":[]},{"id":"A17","board":"6x6","row":3,"col":5,"task":"Any Boss Jar","points":2,"ss":1,"prefs":[2,2,2,1,3,2,2,2,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A18","board":"6x6","row":3,"col":6,"task":"Completed God Sword","points":3,"ss":4,"prefs":[2,2,2,2,1,3,2,1,1,1,1,2,1,1,3,2],"subs":["Blade 1","Blade 2","Blade 3","Hilt"],"pool":[],"alts":[]},{"id":"A19","board":"6x6","row":4,"col":1,"task":"Completed Tenacle Whip","points":1,"ss":2,"prefs":[2,3,3,3,3,2,2,2,2,1,1,2,2,1,1,1],"subs":["Whip","Kraken Tentacle"],"pool":[],"alts":[]},{"id":"A20","board":"6x6","row":4,"col":2,"task":"Raids Off-hand","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A21","board":"6x6","row":4,"col":3,"task":"Completed Confliction Gaunlets","points":3,"ss":3,"prefs":[1,1,2,1,2,2,2,3,1,1,1,1,2,2,3,2],"subs":["Onyx","Zenyte","Cloth"],"pool":[],"alts":[]},{"id":"A22","board":"6x6","row":4,"col":4,"task":"Mix/Match barrow set","points":1,"ss":4,"prefs":[1,2,1,4,1,1,2,2,1,1,1,2,1,1,1,1],"subs":["Helm","Top","Bottom","Weapon"],"pool":[],"alts":[]},{"id":"A23","board":"6x6","row":4,"col":5,"task":"Completed Rancor or Nally","points":3,"ss":3,"prefs":[2,2,3,3,2,1,2,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[{"label":"Rancor","parts":["Onyx","Zenyte","Fang"]},{"label":"Noxious Halberd","parts":["Halberd piece","Halberd piece","Halberd piece"]}]},{"id":"A24","board":"6x6","row":4,"col":6,"task":"Any Cerb Crystal***","points":2,"ss":1,"prefs":[2,1,3,1,2,2,2,3,3,1,1,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A25","board":"6x6","row":5,"col":1,"task":"12 GM times for Solo-Only Bosses*****","points":5,"ss":12,"prefs":[1,1,1,1,1,2,1,1,4,4,1,2,2,2,4,2],"subs":[],"pool":["Alchemical Hydra","Corrupted Gauntlet","Gauntlet","Zulrah","Phosani's Nightmare","Phantom Muspah","Duke Sucellus","Vardorvis","Leviathan","Araxxor","Gargoyles","Doom Racer","Inferno","Colo","Fight Caves"],"poolNote":"12 times total — each boss may be used twice","poolMax":2,"alts":[]},{"id":"A26","board":"6x6","row":5,"col":2,"task":"Voidwaker piece","points":3,"ss":1,"prefs":[1,2,3,2,2,3,2,4,3,1,1,3,1,1,3,3],"subs":[],"pool":[],"alts":[]},{"id":"A27","board":"6x6","row":5,"col":3,"task":"2 Raids Misc Purple (including Cox/TOB Kits and Dust)*","points":2,"ss":2,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A28","board":"6x6","row":5,"col":4,"task":"3 Uncut Onyx or Onyx (Tekton)","points":3,"ss":3,"prefs":[2,2,2,1,3,1,1,2,1,1,1,2,1,2,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A29","board":"6x6","row":5,"col":5,"task":"Completed Blessed Spirit Shield or Sigil","points":4,"ss":2,"prefs":[4,3,2,2,2,3,2,1,1,4,1,3,1,1,1,1],"subs":[],"pool":[],"alts":[{"label":"Sigil","parts":["Sigil"]},{"label":"Blessed Spirit Shield","parts":["Spirit Shield","Holy Elixir"]}]},{"id":"A30","board":"6x6","row":5,"col":6,"task":"2 Tormented Demons Uniques","points":3,"ss":2,"prefs":[2,3,2,3,2,3,3,2,3,3,1,2,1,2,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A31","board":"6x6","row":6,"col":1,"task":"2 Oathplate Armor piece or 900 Oathplate Shards**","points":3,"ss":2,"prefs":[1,2,2,1,2,1,1,1,2,1,1,2,2,2,4,2],"subs":[],"pool":[],"alts":[]},{"id":"A32","board":"6x6","row":6,"col":2,"task":"Jar of Light","points":1,"ss":1,"prefs":[2,1,1,1,3,2,2,2,2,2,2,1,2,1,4,1],"subs":[],"pool":[],"alts":[]},{"id":"A33","board":"6x6","row":6,"col":3,"task":"3 Virtus or SRA Pieces","points":5,"ss":3,"prefs":[2,1,1,1,1,3,1,3,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A34","board":"6x6","row":6,"col":4,"task":"Nex Unique (Pet doesn't count)","points":3,"ss":1,"prefs":[1,1,1,3,1,2,1,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A35","board":"6x6","row":6,"col":5,"task":"3 Brimstone Ring Pieces","points":3,"ss":3,"prefs":[2,3,2,4,3,2,2,3,3,4,1,1,2,1,2,4],"subs":[],"pool":[],"alts":[]},{"id":"A36","board":"6x6","row":6,"col":6,"task":"Enhanced Crystal Weapon Seed","points":5,"ss":1,"prefs":[2,2,1,1,3,3,2,4,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B01","board":"4x4","row":1,"col":1,"task":"2m Mining Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,3,1,2,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B02","board":"4x4","row":1,"col":2,"task":"Beef (Brutus pet)","points":2,"ss":1,"prefs":[2,4,3,4,4,4,3,2,1,1,1,1,2,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B03","board":"4x4","row":1,"col":3,"task":"2 God Trimmed Rune Armor or God D'hide pieces","points":2,"ss":2,"prefs":[2,2,2,2,3,2,3,3,3,1,2,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"B04","board":"4x4","row":1,"col":4,"task":"Dragon Ornament Kit","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,3,3,2,2,2,2,1,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B05","board":"4x4","row":2,"col":1,"task":"Obsidian Armor piece","points":2,"ss":1,"prefs":[2,3,2,4,2,2,3,2,1,2,1,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B06","board":"4x4","row":2,"col":2,"task":"Crystal Tool Seed or Zalcano shard","points":5,"ss":1,"prefs":[2,2,1,1,3,2,2,3,2,1,1,2,1,2,3,1],"subs":[],"pool":[],"alts":[]},{"id":"B07","board":"4x4","row":2,"col":3,"task":"Any Elemental Tome","points":1,"ss":1,"prefs":[2,4,1,2,1,3,3,2,1,1,2,2,3,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"B08","board":"4x4","row":2,"col":4,"task":"2m Fishing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,1,3,1,1,1,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B09","board":"4x4","row":3,"col":1,"task":"20 BA Queen kills******","points":4,"ss":20,"prefs":[2,3,1,1,1,1,1,2,2,1,1,2,2,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B10","board":"4x4","row":3,"col":2,"task":"2m Sailing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,1,1,2,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B11","board":"4x4","row":3,"col":3,"task":"16 Dragon Sheet Pieces","points":2,"ss":16,"prefs":[4,2,2,2,1,3,3,2,3,2,2,2,1,1,4,4],"subs":[],"pool":[],"alts":[]},{"id":"B12","board":"4x4","row":3,"col":4,"task":"Bottled Storm, Dragon Hook, and Dragon Cannon","points":3,"ss":3,"prefs":[4,3,2,3,1,2,3,1,3,1,1,2,2,1,4,4],"subs":["Bottled Storm","Dragon Hook","Dragon Cannon"],"pool":[],"alts":[]},{"id":"B13","board":"4x4","row":4,"col":1,"task":"Fletching Knife and Bowstring Spool*******","points":3,"ss":2,"prefs":[1,2,2,3,3,2,3,3,3,1,1,3,1,1,1,2],"subs":["Fletching Knife","Bowstring Spool"],"pool":[],"alts":[]},{"id":"B14","board":"4x4","row":4,"col":2,"task":"Completed Mix/Match God Book","points":2,"ss":4,"prefs":[2,2,3,2,3,3,3,3,3,2,2,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B15","board":"4x4","row":4,"col":3,"task":"Dragon or Demon Mask","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,4,3,1,2,2,2,1,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B16","board":"4x4","row":4,"col":4,"task":"3 Aranea Boots","points":2,"ss":3,"prefs":[2,3,3,1,3,3,3,1,1,1,1,1,1,1,2,2],"subs":[],"pool":[],"alts":[]}],"ratingKey":{"1":"Like","2":"Neutral","3":"Please no","4":"Can't do","5":"In progress"},"footnotes":{"*":"Raids misc purples include CoX/ToB kits and dust.","**":"2 Oathplate armour pieces, or 900 Oathplate shards.","***":"Any Cerberus crystal counts.","****":"6 different group GM times — each combo counts once.","*****":"12 GM times across solo-only bosses. Each boss can be done twice.","******":"20 Barbarian Assault Queen kills.","*******":"Fletching knife and bowstring spool."}};
 /* label, chip class, glyph. The glyph means a rating never depends on colour
    alone - it survives any form of colour blindness, and a greyscale print. */
 const RATE = {1:['Like','g','\u2713'], 2:['Neutral','','\u00b7'], 3:['Please no','a','~'],
@@ -654,7 +690,11 @@ function normalize(raw){
                              prefs:toArray(t.prefs),
                              subs:toArray(t.subs),
                              pool:toArray(t.pool),
-                             poolMax:Math.max(1, +t.poolMax||1)}));
+                             poolMax:Math.max(1, +t.poolMax||1),
+                             /* either/or tiles: each entry is one acceptable route */
+                             alts:toArray(t.alts).map(a=>({label:String((a&&a.label)||''),
+                                                           parts:toArray(a&&a.parts).map(String)}))
+                                  .filter(a=>a.label && a.parts.length)}));
   const src = raw.progress || {};
   const roster = new Set(d.players.map(p=>p.name));
   /* accept a legacy single name, an array, or Firebase's numeric-key object;
@@ -1127,6 +1167,8 @@ function openTile(id){
       <div class="flabel">Evidence
         ${canEdit?'— a link per screenshot':''}
         (<span id="fillN">${linkCount(s)}</span> / ${t.ss})</div>
+      ${t.alts.length?`<div class="note" style="margin-bottom:9px;border-left:2px solid var(--line2);padding-left:9px">
+        Either ${t.alts.map(a=>`<b>${esc(a.label)}</b> (${a.parts.map(esc).join(', ')})`).join(' &nbsp;or&nbsp; ')}</div>`:''}
       ${canEdit&&t.pool.length?`<div class="note" style="margin-bottom:9px">${esc(t.poolNote
         || (t.poolMax>1?`Each option may be used up to ${t.poolMax} times`:'Pick distinct options'))}</div>`:''}
       ${canEdit?`<div class="slots" id="slots">${slotRows()}</div>`:evidenceRead()}
@@ -1325,7 +1367,8 @@ function draft(){
     return `<tr><td>${l.left===0?'':''}${esc(l.label)}</td><td class="note">${esc(bn)}</td>
       <td class="num" style="color:var(--gold)">+${l.sum}</td>
       <td class="num">${left.length}</td>
-      <td class="num">${left.length?rate.toFixed(1):'<span class="chip gold">doubled</span>'}</td>
+      <td class="num" style="color:var(--gold)" title="${left.length?`+${l.sum} bonus ÷ ${left.length} tile${left.length===1?'':'s'} left`:''}">${
+        left.length?'+'+rate.toFixed(1):'<span class="chip gold">doubled</span>'}</td>
       <td><div class="chips">${left.slice(0,4).map(t=>{const a=prog(t.id).assigned;
         return `<span class="chip ${a.length?'p':''}" title="${esc(clean(t.task))}${a.length?' - '+esc(a.join(', ')):''}">${t.id}${a.length?' · '+esc(a[0])+(a.length>1?` +${a.length-1}`:''):''}</span>`}).join('')}${left.length>4?`<span class="chip">+${left.length-4}</span>`:''}</div></td></tr>`}).join('');
 
@@ -1337,10 +1380,10 @@ function draft(){
       <td class="mono" style="white-space:nowrap;color:var(--gold)">${esc(when(x.when))}</td>
       <td>${esc(clean(t.task))} <span class="tid mono">${t.id}</span></td>
       <td>${esc(x.by)||'<span class="note">-</span>'}</td>
-      <td class="num">${x.joined.length}</td>
-      <td><div class="chips">${x.joined.slice(0,6).map(n=>
-        `<span class="chip ${n===ME?'gold':''}">${esc(n)}</span>`).join('')}${
-        x.joined.length>6?`<span class="chip">+${x.joined.length-6}</span>`:''}</div></td>
+      <td><div class="chips">${x.joined.map(n=>
+        `<span class="chip ${n===ME?'gold':''}">${esc(n)}</span>`).join('')
+        || '<span class="note">nobody yet</span>'}</div></td>
+      <td>${x.note?esc(x.note):'<span class="note">-</span>'}</td>
     </tr>`).join('')
     : '<tr><td colspan="5" class="note">Nothing planned. Open a tile and propose a time.</td></tr>';
 
@@ -1369,6 +1412,60 @@ function suggest(){
   renderAll();
   toast(n?`Assigned ${n} tile${n===1?'':'s'}`:'Every tile already has someone');
   autosave(0);
+}
+
+/* ---------- multi-tile breakdown ----------
+   Every tile that needs more than one piece of evidence, with the pieces still
+   missing spelled out. Named parts come from `subs`; either/or tiles list their
+   routes; pool tiles show which options have been picked. */
+let mtHideDone = false;
+
+function partLabel(t, sl, i){
+  if(t.pool.length) return sl.opt || null;          // null renders as "not picked"
+  return t.subs[i] || `Screenshot ${i+1}`;
+}
+
+function multi(){
+  const tiles = DATA.tasks.filter(t => t.ss > 1);
+  const shown = tiles.filter(t => !(mtHideDone && prog(t.id).status === 'verified'));
+
+  let doneTiles = 0, missing = 0;
+  for(const t of tiles){
+    const s = prog(t.id);
+    if(s.status === 'verified') doneTiles++;
+    missing += Math.max(0, t.ss - linkCount(s));
+  }
+  $('#mtSummary').innerHTML = `${tiles.length} tiles need more than one screenshot &middot; `
+    + `<b>${doneTiles}</b> verified &middot; <b>${missing}</b> piece${missing===1?'':'s'} of evidence still to log`;
+
+  const order = t => (prog(t.id).status === 'verified' ? 1 : 0);
+  $('#mtGrid').innerHTML = shown
+    .slice().sort((a,b)=>order(a)-order(b))
+    .map(t=>{
+      const s = prog(t.id), got = linkCount(s), done = s.status === 'verified';
+      const state = done ? 'done' : s.assigned.length ? 'active' : 'none';
+      const rows = s.slots.map((sl,i)=>{
+        const has = !!(sl.link && sl.link.trim());
+        const label = partLabel(t, sl, i);
+        return `<div class="mt-row ${has?'got':'want'}">
+          <span class="mt-tick">${has?'&#10003;':'&#9675;'}</span>
+          <span>${label===null?'<em class="note">not picked yet</em>':esc(label)}</span></div>`;
+      }).join('');
+      const alts = t.alts.length
+        ? `<div class="mt-alt">Either ${t.alts.map(a=>`<b>${esc(a.label)}</b>`).join(' or ')} &mdash;
+             ${t.alts.map(a=>a.parts.map(esc).join(' + ')).join(' &nbsp;/&nbsp; ')}</div>` : '';
+      const who = done ? toArray(s.by) : toArray(s.assigned);
+      return `<button class="mt ${state}" data-open="${t.id}" type="button">
+        <div class="mt-head">
+          <span class="tid mono">${t.id}</span>
+          <span class="mt-name">${esc(clean(t.task))}</span>
+          <span class="mt-count">${got}/${t.ss}</span>
+        </div>
+        <div class="note">${done?'Verified':state==='active'?esc(who.join(', ')):'Nobody assigned'}</div>
+        ${alts}
+        <div class="mt-list">${rows}</div>
+      </button>`;
+    }).join('') || '<div class="empty"><h3>Nothing left</h3><div class="note">Every multi-part tile is verified.</div></div>';
 }
 
 /* ---------- roster ---------- */
@@ -1419,12 +1516,12 @@ function roster(){
 function show(v){
   view=v;
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v));
-  ['board','draft','roster'].forEach(k=>$('#v-'+k).hidden = k!==v);
-  if(v==='draft')draft(); if(v==='roster')roster();
+  ['board','draft','multi','roster'].forEach(k=>$('#v-'+k).hidden = k!==v);
+  if(v==='draft')draft(); if(v==='roster')roster(); if(v==='multi')multi();
 }
 function renderAll(){
   header(); identity(); strip(); boards(); banner(); setSync();
-  if(view==='draft')draft(); if(view==='roster')roster();
+  if(view==='draft')draft(); if(view==='roster')roster(); if(view==='multi')multi();
 }
 
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>show(b.dataset.view));
@@ -1440,6 +1537,9 @@ $('#clearAssign').onclick=()=>{
 };
 
 $('#sessTbl').onclick=e=>{ const tr=e.target.closest('tr[data-open]'); if(tr) openTile(tr.dataset.open); };
+$('#mtGrid').onclick=e=>{ const c=e.target.closest('[data-open]'); if(c) openTile(c.dataset.open); };
+$('#mtToggle').onclick=e=>{ mtHideDone=!mtHideDone;
+  e.target.textContent = mtHideDone?'Show finished':'Hide finished'; multi(); };
 $('#setDb').onclick=askDb;
 
 /* Follows the OS preference until someone picks a side, then remembers it. */
