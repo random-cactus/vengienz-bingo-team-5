@@ -9,14 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Every text colour clears WCAG AAA (7:1) on every surface, in BOTH themes -
-     measured, not eyeballed. See CLAUDE.md before changing any of these.
-
-     --jade is teal rather than green because green against a warm grey is the
-     pair deuteranopia collapses. Tile states are red/amber/green as asked, and
-     green vs red IS the classic colour-blind collision (dE 6 under deuteranopia)
-     - which is why every tile also carries a word: UNASSIGNED / PENDING / DONE.
-     Colour is decoration here; the label is the signal. Don't drop the labels. */
   --ink:#0E0B07; --panel:#191410; --raise:#241E17; --raise2:#2F281E;
   --line:#4A3B28; --line2:#6B5740;
   --gold:#FFC44F; --gold-dim:#E5B152;
@@ -64,10 +56,6 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 a{color:var(--gold)}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 .px{font-family:"Barlow",system-ui,sans-serif;font-weight:600;letter-spacing:0}
-/* Anything numeric under ~20px uses the mono face instead - the pixel font
-   loses too many pixels per glyph to read at small sizes. */
-.figure{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;
-  font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .wrap{max-width:1800px;margin:0 auto;padding:0 26px 90px}
 
 /* ---------- header ---------- */
@@ -99,6 +87,13 @@ a{color:var(--gold)}
 .bar{height:3px;background:var(--raise2);border-radius:2px;margin-top:9px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--gold);transition:width .35s ease}
 .bar.p i{background:var(--purple)} .bar.j i{background:var(--jade)}
+.mvp-list{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:3px}
+.mvp-list li{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:8px;align-items:baseline}
+.mvp-rank{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);text-align:right}
+.mvp-name{font-size:14.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mvp-pts{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15px;color:var(--gold)}
+.mvp-list li.mvp-me .mvp-name{color:var(--gold);font-weight:600}
+.mvp-none{margin-top:8px;font-size:13.5px;color:var(--faint)}
 
 /* ---------- tabs ---------- */
 .tabs{display:flex;gap:2px;margin:26px 0 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -198,7 +193,7 @@ tbody tr[data-open]{cursor:pointer}
 /* ---------- generic panel ---------- */
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
 .panel h3{font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
-/* heading on the left, controls hard right, on one line */
+/* heading left, controls hard right */
 .panel-head{display:flex;align-items:center;gap:12px;min-height:32px;margin-bottom:12px}
 .panel-head h3{margin-bottom:0}
 .panel-head .sync{margin-left:auto;white-space:nowrap}
@@ -239,9 +234,7 @@ tbody tr:hover{background:var(--raise)}
   color:var(--muted);letter-spacing:.05em;white-space:nowrap;margin:0 auto;display:block}
 .cell{height:26px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:12px;
   border-right:1px solid rgba(16,14,11,.7);cursor:default}
-/* Cells carry the rating numeral as well as the colour, so a viewer who can't
-   separate the hues still reads the grid. Backgrounds are spread in lightness
-   for the same reason. */
+/* Cells print the numeral too, so the grid still reads without colour. */
 .cell{font-weight:600}
 .r1{background:rgba(111,215,232,.30);color:var(--text)}
 .r2{background:rgba(198,188,169,.16);color:var(--text)}
@@ -370,7 +363,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .mt-row.got{color:var(--text)} .mt-row.got .mt-tick{color:var(--ok)}
 .mt-row.want{color:var(--muted)} .mt-row.want .mt-tick{color:var(--faint)}
 
-/* ---------- sync / bin state ---------- */
+/* ---------- sync line + banners ---------- */
 .sync{font-size:12px;color:var(--faint);letter-spacing:.06em;white-space:nowrap}
 .btn.on{border-color:var(--gold);color:var(--gold);background:rgba(255,196,79,.10)}
 .btn[disabled]{opacity:.62;cursor:not-allowed}
@@ -451,15 +444,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 
   <!-- DRAFT -->
   <section class="view" id="v-draft" hidden>
-    <div class="toolbar">
-      <button class="btn solid" id="suggest">Suggest assignments</button>
-      <button class="btn" id="clearAssign">Clear assignments</button>
-      <span class="note">Verifiers only. Fills empty tiles and never overwrites a pick.</span>
-    </div>
     <div class="two" style="margin-bottom:16px">
       <div class="panel">
         <h3>Coverage risk</h3>
-        <div class="note" style="margin-bottom:10px">Thinnest bench first. Volunteers liked the tile; blocked means can't do it.</div>
+        <div class="note" style="margin-bottom:10px">These tiles have the least volunteers</div>
         <table><thead><tr><th>Tile</th><th class="num">Pts</th><th class="num">Volunteers</th><th class="num">Blocked</th></tr></thead><tbody id="riskTbl"></tbody></table>
       </div>
       <div class="panel">
@@ -470,9 +458,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
     </div>
     <div class="panel" style="margin-bottom:16px">
       <h3>Line priority</h3>
-      <div class="note" style="margin-bottom:10px">Finish a line and it pays its points a second time.
-        Cheapest doublings first: a <b>+17</b> line with <b>2</b> tiles left works out at <b>+8.5</b> of bonus
-        per tile you finish, so it beats a +20 line needing 5.</div>
+      <div class="note" style="margin-bottom:10px">These lines offer the best return on investment</div>
       <table><thead><tr>
         <th>Line</th><th>Board</th>
         <th class="num" title="What the line pays again once every tile on it is done">Bonus</th>
@@ -489,6 +475,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
       <h3>Every tile</h3>
       <table><thead><tr><th>Tile</th><th class="num">Pts</th><th class="num">SS</th><th>Assigned</th><th>Best candidates</th></tr></thead><tbody id="draftTbl"></tbody></table>
     </div>
+    <div class="toolbar">
+      <button class="btn solid" id="suggest">Suggest assignments</button>
+      <button class="btn" id="clearAssign">Clear assignments</button>
+    </div>
   </section>
 
   <!-- MULTI-TILE -->
@@ -502,15 +492,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 
   <!-- ROSTER -->
   <section class="view" id="v-roster" hidden>
-    <div class="toolbar">
-      <label class="flabel" style="margin:0">Sort tiles</label>
-      <select id="sortBy" style="width:auto"><option value="board">Board order</option><option value="scarce">Fewest volunteers</option><option value="pts">Highest points</option></select>
-      <span class="spacer"></span>
-    </div>
     <div class="two" style="margin-bottom:18px">
     <div class="panel">
       <div class="panel-head"><h3>MVP Leaderboard</h3></div>
-      <div class="note" style="margin-bottom:10px">Points from verified tiles you're credited on.</div>
       <table><thead><tr><th class="num">#</th><th>Player</th><th class="num">Tiles</th><th class="num">Points</th>
         <th></th><th class="num">Pending</th><th class="num">Assigned</th></tr></thead><tbody id="leadTbl"></tbody></table>
     </div>
@@ -521,11 +505,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
         <span class="sync" id="ehbSync"></span>
         <button class="btn" id="ehbBtn">Update EHB</button>
       </div>
-      <div class="note" style="margin-bottom:10px">Gained during the event only</div>
       <table><thead><tr><th class="num">#</th><th>Player</th>
         <th class="num" title="Efficient hours bossed gained between the event start and end">EHB gained</th>
         <th></th></tr></thead><tbody id="ehbTbl"></tbody></table>
     </div>
+    </div>
+    <div class="toolbar">
+      <label class="flabel" style="margin:0">Sort tiles</label>
+      <select id="sortBy" style="width:auto"><option value="board">Board order</option><option value="scarce">Fewest volunteers</option><option value="pts">Highest points</option></select>
+      <span class="spacer"></span>
     </div>
     <div class="heat-wrap"><table class="heat" id="heat"></table></div>
     <div class="legend">
@@ -552,34 +540,19 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 <div class="toast" id="toast"></div>
 
 <script>
-/* Offline fallback only. The database is the source of truth; this snapshot is
-   used solely when there is no cached copy AND the fetch fails, so the page never
-   renders blank. Safe to delete if you'd rather show an error in that case. */
+/* Offline fallback. Only used when there's no cached copy and the fetch fails. */
 const SEED = {"event":{"name":"Vengienz Summer Bingo 2026","start":"2026-08-07T17:00:00","end":"2026-08-16T17:00:00","rowMult":2,"colMult":0},"boards":[{"key":"6x6","name":"PvM Board","size":6},{"key":"4x4","name":"Collector Board","size":4}],"players":[{"name":"GA1","discord":"GA1/Gim Ga1","wom":"Gim Ga1"},{"name":"Napsuttaja","discord":"Napsuttaja | anti","wom":"Napsuttaja"},{"name":"oKsirf","discord":"oKsirf","wom":"oKsirf"},{"name":"Diebels","discord":"Diebels","wom":"Diebels"},{"name":"MrBapparappa","discord":"MrBapparappa","wom":"MrBapparappa"},{"name":"Splazzoid","discord":"Splazzoid","wom":"Splazzoid"},{"name":"cefax","discord":"cefax","wom":"cefax"},{"name":"Zaphir","discord":"Zaphir","wom":"Zaphir"},{"name":"TuhmaTuma","discord":"TuhmaTuma","wom":"TuhmaTuma"},{"name":"Numquam Quit","discord":"Numquam Quit","wom":"Numquam Quit"},{"name":"710 710 710","discord":"710 710 710","wom":"710 710 710"},{"name":"ClimberAZ","discord":"ClimberAZ","wom":"ClimberAZ"},{"name":"Schysstkuk","discord":"Schysstkuk","wom":"Schysstkuk"},{"name":"Dry Stink","discord":"Dry Stink","wom":"Dry Stink"},{"name":"Erenglodill","discord":"Erenglodill","wom":"Erenglodill"},{"name":"Ehren Mann","discord":"Ehren Mann","wom":"Ehren Mann"}],"tasks":[{"id":"A01","board":"6x6","row":1,"col":1,"task":"3 Raids armor pieces","points":4,"ss":3,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A02","board":"6x6","row":1,"col":2,"task":"Any Dragonbane Weapon","points":2,"ss":1,"prefs":[1,1,1,2,1,1,2,1,1,1,1,2,1,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A03","board":"6x6","row":1,"col":3,"task":"Dragon Harpoon or Dragon Pick","points":1,"ss":1,"prefs":[2,2,2,2,3,1,2,2,2,1,1,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A04","board":"6x6","row":1,"col":4,"task":"Completed Rupture","points":3,"ss":3,"prefs":[2,4,2,1,3,3,2,2,3,1,1,1,1,2,2,2],"subs":["Onyx","Zenyte","Fang"],"pool":[],"alts":[]},{"id":"A05","board":"6x6","row":1,"col":5,"task":"Completed Venator Bow","points":5,"ss":5,"prefs":[1,2,3,3,2,3,2,3,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A06","board":"6x6","row":1,"col":6,"task":"3 Zenyte Shards","points":2,"ss":3,"prefs":[2,1,2,2,2,3,3,2,1,1,2,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A07","board":"6x6","row":2,"col":1,"task":"Mix/Match Moons set","points":1,"ss":4,"prefs":[1,2,2,3,1,2,2,3,2,1,1,2,1,1,1,1],"subs":["Helm","Top","Bottom","Weapon"],"pool":[],"alts":[]},{"id":"A08","board":"6x6","row":2,"col":2,"task":"2 Inferno GM speed runs or 4 Colo GM speed runs","points":5,"ss":4,"prefs":[4,1,1,4,3,2,1,2,4,4,4,4,4,4,4,4],"subs":[],"pool":[],"alts":[{"label":"2 Inferno GM speeds","parts":["Inferno GM speed","Inferno GM speed"]},{"label":"4 Colo GM speeds","parts":["Colo GM speed","Colo GM speed","Colo GM speed","Colo GM speed"]}]},{"id":"A09","board":"6x6","row":2,"col":3,"task":"Nightmare Unique","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,2,1,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A10","board":"6x6","row":2,"col":4,"task":"4 Blood Shards","points":2,"ss":4,"prefs":[1,3,2,1,3,2,2,2,1,1,1,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A11","board":"6x6","row":2,"col":5,"task":"Raids Weapon","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A12","board":"6x6","row":2,"col":6,"task":"Dragon WarHammer","points":5,"ss":1,"prefs":[2,3,3,3,4,3,2,4,2,2,3,3,2,1,3,2],"subs":[],"pool":[],"alts":[]},{"id":"A13","board":"6x6","row":3,"col":1,"task":"2 Colosseum Uniques","points":3,"ss":2,"prefs":[2,1,2,1,1,2,1,2,3,1,1,4,3,2,4,1],"subs":[],"pool":[],"alts":[]},{"id":"A14","board":"6x6","row":3,"col":2,"task":"Twinflame Staff","points":2,"ss":2,"prefs":[1,2,1,3,1,2,2,2,1,3,1,1,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A15","board":"6x6","row":3,"col":3,"task":"All 4 Dk Rings","points":1,"ss":4,"prefs":[2,2,2,2,1,3,2,1,3,1,1,2,2,1,2,1],"subs":["Berserker Ring","Warrior Ring","Archers Ring","Seers Ring"],"pool":[],"alts":[]},{"id":"A16","board":"6x6","row":3,"col":4,"task":"6 Unique Group GM time****","points":5,"ss":6,"prefs":[1,1,1,1,1,1,1,1,1,2,2,2,3,2,3,3],"subs":[],"pool":["Huey","Nightmare","Tob Duo","Tob 3 Man","Tob 4 Man","Tob 5 Man","HMT 3 Man","HMT 4 Man","HMT 5 Man","Chambers Trio","Chambers 5-Man","CM Trio","CM 5-Man","Tombs Speed Runner 2","Yama"],"poolNote":"Pick any 6 distinct combos","poolMax":1,"alts":[]},{"id":"A17","board":"6x6","row":3,"col":5,"task":"Any Boss Jar","points":2,"ss":1,"prefs":[2,2,2,1,3,2,2,2,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A18","board":"6x6","row":3,"col":6,"task":"Completed God Sword","points":3,"ss":4,"prefs":[2,2,2,2,1,3,2,1,1,1,1,2,1,1,3,2],"subs":["Blade 1","Blade 2","Blade 3","Hilt"],"pool":[],"alts":[]},{"id":"A19","board":"6x6","row":4,"col":1,"task":"Completed Tenacle Whip","points":1,"ss":2,"prefs":[2,3,3,3,3,2,2,2,2,1,1,2,2,1,1,1],"subs":["Whip","Kraken Tentacle"],"pool":[],"alts":[]},{"id":"A20","board":"6x6","row":4,"col":2,"task":"Raids Off-hand","points":4,"ss":1,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A21","board":"6x6","row":4,"col":3,"task":"Completed Confliction Gaunlets","points":3,"ss":3,"prefs":[1,1,2,1,2,2,2,3,1,1,1,1,2,2,3,2],"subs":["Onyx","Zenyte","Cloth"],"pool":[],"alts":[]},{"id":"A22","board":"6x6","row":4,"col":4,"task":"Mix/Match barrow set","points":1,"ss":4,"prefs":[1,2,1,4,1,1,2,2,1,1,1,2,1,1,1,1],"subs":["Helm","Top","Bottom","Weapon"],"pool":[],"alts":[]},{"id":"A23","board":"6x6","row":4,"col":5,"task":"Completed Rancor or Nally","points":3,"ss":3,"prefs":[2,2,3,3,2,1,2,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[{"label":"Rancor","parts":["Onyx","Zenyte","Fang"]},{"label":"Noxious Halberd","parts":["Halberd piece","Halberd piece","Halberd piece"]}]},{"id":"A24","board":"6x6","row":4,"col":6,"task":"Any Cerb Crystal***","points":2,"ss":1,"prefs":[2,1,3,1,2,2,2,3,3,1,1,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A25","board":"6x6","row":5,"col":1,"task":"12 GM times for Solo-Only Bosses*****","points":5,"ss":12,"prefs":[1,1,1,1,1,2,1,1,4,4,1,2,2,2,4,2],"subs":[],"pool":["Alchemical Hydra","Corrupted Gauntlet","Gauntlet","Zulrah","Phosani's Nightmare","Phantom Muspah","Duke Sucellus","Vardorvis","Leviathan","Araxxor","Gargoyles","Doom Racer","Inferno","Colo","Fight Caves"],"poolNote":"12 times total — each boss may be used twice","poolMax":2,"alts":[]},{"id":"A26","board":"6x6","row":5,"col":2,"task":"Voidwaker piece","points":3,"ss":1,"prefs":[1,2,3,2,2,3,2,4,3,1,1,3,1,1,3,3],"subs":[],"pool":[],"alts":[]},{"id":"A27","board":"6x6","row":5,"col":3,"task":"2 Raids Misc Purple (including Cox/TOB Kits and Dust)*","points":2,"ss":2,"prefs":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"A28","board":"6x6","row":5,"col":4,"task":"3 Uncut Onyx or Onyx (Tekton)","points":3,"ss":3,"prefs":[2,2,2,1,3,1,1,2,1,1,1,2,1,2,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A29","board":"6x6","row":5,"col":5,"task":"Completed Blessed Spirit Shield or Sigil","points":4,"ss":2,"prefs":[4,3,2,2,2,3,2,1,1,4,1,3,1,1,1,1],"subs":[],"pool":[],"alts":[{"label":"Sigil","parts":["Sigil"]},{"label":"Blessed Spirit Shield","parts":["Spirit Shield","Holy Elixir"]}]},{"id":"A30","board":"6x6","row":5,"col":6,"task":"2 Tormented Demons Uniques","points":3,"ss":2,"prefs":[2,3,2,3,2,3,3,2,3,3,1,2,1,2,1,1],"subs":[],"pool":[],"alts":[]},{"id":"A31","board":"6x6","row":6,"col":1,"task":"2 Oathplate Armor piece or 900 Oathplate Shards**","points":3,"ss":2,"prefs":[1,2,2,1,2,1,1,1,2,1,1,2,2,2,4,2],"subs":[],"pool":[],"alts":[]},{"id":"A32","board":"6x6","row":6,"col":2,"task":"Jar of Light","points":1,"ss":1,"prefs":[2,1,1,1,3,2,2,2,2,2,2,1,2,1,4,1],"subs":[],"pool":[],"alts":[]},{"id":"A33","board":"6x6","row":6,"col":3,"task":"3 Virtus or SRA Pieces","points":5,"ss":3,"prefs":[2,1,1,1,1,3,1,3,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A34","board":"6x6","row":6,"col":4,"task":"Nex Unique (Pet doesn't count)","points":3,"ss":1,"prefs":[1,1,1,3,1,2,1,1,1,1,1,1,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"A35","board":"6x6","row":6,"col":5,"task":"3 Brimstone Ring Pieces","points":3,"ss":3,"prefs":[2,3,2,4,3,2,2,3,3,4,1,1,2,1,2,4],"subs":[],"pool":[],"alts":[]},{"id":"A36","board":"6x6","row":6,"col":6,"task":"Enhanced Crystal Weapon Seed","points":5,"ss":1,"prefs":[2,2,1,1,3,3,2,4,1,1,1,1,2,2,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B01","board":"4x4","row":1,"col":1,"task":"2m Mining Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,3,1,2,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B02","board":"4x4","row":1,"col":2,"task":"Beef (Brutus pet)","points":2,"ss":1,"prefs":[2,4,3,4,4,4,3,2,1,1,1,1,2,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B03","board":"4x4","row":1,"col":3,"task":"2 God Trimmed Rune Armor or God D'hide pieces","points":2,"ss":2,"prefs":[2,2,2,2,3,2,3,3,3,1,2,2,1,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"B04","board":"4x4","row":1,"col":4,"task":"Dragon Ornament Kit","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,3,3,2,2,2,2,1,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B05","board":"4x4","row":2,"col":1,"task":"Obsidian Armor piece","points":2,"ss":1,"prefs":[2,3,2,4,2,2,3,2,1,2,1,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B06","board":"4x4","row":2,"col":2,"task":"Crystal Tool Seed or Zalcano shard","points":5,"ss":1,"prefs":[2,2,1,1,3,2,2,3,2,1,1,2,1,2,3,1],"subs":[],"pool":[],"alts":[]},{"id":"B07","board":"4x4","row":2,"col":3,"task":"Any Elemental Tome","points":1,"ss":1,"prefs":[2,4,1,2,1,3,3,2,1,1,2,2,3,1,2,1],"subs":[],"pool":[],"alts":[]},{"id":"B08","board":"4x4","row":2,"col":4,"task":"2m Fishing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,1,3,1,1,1,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B09","board":"4x4","row":3,"col":1,"task":"20 BA Queen kills******","points":4,"ss":20,"prefs":[2,3,1,1,1,1,1,2,2,1,1,2,2,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B10","board":"4x4","row":3,"col":2,"task":"2m Sailing Xp","points":1,"ss":1,"prefs":[2,4,1,2,1,2,2,1,1,2,2,2,4,1,1,2],"subs":[],"pool":[],"alts":[]},{"id":"B11","board":"4x4","row":3,"col":3,"task":"16 Dragon Sheet Pieces","points":2,"ss":16,"prefs":[4,2,2,2,1,3,3,2,3,2,2,2,1,1,4,4],"subs":[],"pool":[],"alts":[]},{"id":"B12","board":"4x4","row":3,"col":4,"task":"Bottled Storm, Dragon Hook, and Dragon Cannon","points":3,"ss":3,"prefs":[4,3,2,3,1,2,3,1,3,1,1,2,2,1,4,4],"subs":["Bottled Storm","Dragon Hook","Dragon Cannon"],"pool":[],"alts":[]},{"id":"B13","board":"4x4","row":4,"col":1,"task":"Fletching Knife and Bowstring Spool*******","points":3,"ss":2,"prefs":[1,2,2,3,3,2,3,3,3,1,1,3,1,1,1,2],"subs":["Fletching Knife","Bowstring Spool"],"pool":[],"alts":[]},{"id":"B14","board":"4x4","row":4,"col":2,"task":"Completed Mix/Match God Book","points":2,"ss":4,"prefs":[2,2,3,2,3,3,3,3,3,2,2,2,1,1,1,1],"subs":[],"pool":[],"alts":[]},{"id":"B15","board":"4x4","row":4,"col":3,"task":"Dragon or Demon Mask","points":4,"ss":1,"prefs":[2,2,2,2,3,3,3,4,3,1,2,2,2,1,2,2],"subs":[],"pool":[],"alts":[]},{"id":"B16","board":"4x4","row":4,"col":4,"task":"3 Aranea Boots","points":2,"ss":3,"prefs":[2,3,3,1,3,3,3,1,1,1,1,1,1,1,2,2],"subs":[],"pool":[],"alts":[]}],"ratingKey":{"1":"Like","2":"Neutral","3":"Please no","4":"Can't do","5":"In progress"},"footnotes":{"*":"Raids misc purples include CoX/ToB kits and dust.","**":"2 Oathplate armour pieces, or 900 Oathplate shards.","***":"Any Cerberus crystal counts.","****":"6 different group GM times — each combo counts once.","*****":"12 GM times across solo-only bosses. Each boss can be done twice.","******":"20 Barbarian Assault Queen kills.","*******":"Fletching knife and bowstring spool."}};
-/* label, chip class, glyph. The glyph means a rating never depends on colour
-   alone - it survives any form of colour blindness, and a greyscale print. */
+/* label, chip class, glyph. The glyph is what survives colour blindness. */
 const RATE = {1:['Like','g','\u2713'], 2:['Neutral','','\u00b7'], 3:['Please no','a','~'],
               4:["Can't do",'r','\u2717'], 5:['In progress','p','\u2026']};
 
-/* ================================================================
-   Firebase Realtime Database - the single source of truth
-   ================================================================
-   The database holds everything: event, boards, players, tiles, preferences
-   AND per-tile progress. Nothing is read from Google Sheets at runtime.
-
-   Paste your database URL below - either form works:
-     https://<project>-default-rtdb.firebaseio.com                (us-central1)
-     https://<project>-default-rtdb.<region>.firebasedatabase.app (elsewhere)
-
-   Leave it blank and Refresh asks for it once and remembers it in this browser
-   - fine for testing, useless in production where every visitor would have to
-   type it. Hard-code it before deploying.                                   */
+/* Firebase holds the lot: tiles, players, prefs, progress. Nothing reads the
+   sheet at runtime. Leave DB_URL blank and the page asks for one and remembers
+   it, which is fine for testing but hard-code it before deploying. */
 const DB_URL = 'https://vengienz-bingo-team-5-default-rtdb.firebaseio.com';
 
-/* Writes are instant: every edit PATCHes its tile straight away. Reads are not -
-   nothing fetches on load and nothing polls, so Refresh stays a deliberate act.
-   `LOCAL` is therefore no longer a workflow, only a holding pen for writes that
-   FAILED, which the banner offers to retry. */
+/* Writes go out as you make them, reads only on Refresh. LOCAL is not a
+   workflow any more, just somewhere failed writes wait for a retry. */
 
 const KEY       = 'vengienz-bingo-2026';         // last good snapshot
 const KEY_META  = 'vengienz-bingo-2026:meta';    // {fetchedAt, dbUrl}
@@ -587,29 +560,23 @@ const KEY_LOCAL = 'vengienz-bingo-2026:local';   // edits not yet published
 const KEY_ME    = 'vengienz-bingo-2026:me';      // which player you are
 const KEY_THEME = 'vengienz-bingo-2026:theme';
 
-/* Verifiers are decided by name, not by a toggle. Anyone can still pick any name
-   from the header dropdown, so this is guidance for honest people, not security -
-   see the warning in CLAUDE.md. */
+/* Verifier rights follow the name in the header. Anyone can pick any name, so
+   this stops mistakes, not malice. */
 const VERIFIERS = ['oKsirf', 'GA1'];
 const isVerifier = () => VERIFIERS.includes(ME);
 
-/* A tile is open -> pending (someone submitted proof) -> verified (an admin
-   accepted it). Only 'verified' scores. */
-/* One slot per required screenshot: the link that proves it, plus — on pool tiles —
-   which option it proves. Two slots may name the same option, which is how
-   "each boss may be used twice" is expressed; `poolMax` caps how many. */
-/* Two different player lists, deliberately separate:
-     assigned - who is slated to do this tile (planning; the Draft view's currency)
-     by       - who actually gets credit once it's done (outcome)
-   They overlap in practice but aren't the same thing, and only assignment is capped. */
+/* open -> pending -> verified. Only verified scores. */
+/* One slot per screenshot: the link, plus which pool option it proves. Two
+   slots may name the same option, which is how "each boss twice" works. */
+/* assigned = who's lined up, capped at 8. by = who gets the credit. They
+   overlap most of the time but they aren't the same thing. */
 const MAX_ASSIGNED = 8;
 const PROG = () => ({status:'open',assigned:[],by:[],note:'',slots:[],sessions:[],
                      submittedAt:'',submittedBy:'',verifiedAt:'',verifiedBy:''});
 const SLOT = () => ({opt:'',link:''});
 const STATUSES = ['open','pending','verified'];
 
-/* Firebase hands back a dense array as an array but a sparse one as an object
-   with numeric keys. Accept either. */
+/* Firebase returns a sparse array as an object with numeric keys. */
 const toArray = v => Array.isArray(v) ? v
   : (v && typeof v === 'object') ? Object.keys(v).sort((a,b)=>a-b).map(k=>v[k]) : [];
 
@@ -622,15 +589,13 @@ const ls = {
   get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
-/* REST endpoints. `/.json` is the whole document; `/progress.json` is the only
-   thing we ever write, and PATCH there merges per tile. */
+/* /.json is the whole document; /progress.json is all we ever write to. */
 const dbRoot  = () => (DB_URL || META.dbUrl || '').replace(/\/+$/,'');
 const dbRead  = () => dbRoot() + '/.json';
 const dbWrite = () => dbRoot() + '/progress.json';
 const dbHost  = () => dbRoot().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-/* When DB_URL is hard-coded the deployment owns it and a stale localStorage value can
-   never override it. When it's blank we're in browser-configured mode, so the URL has
-   to stay changeable from the UI - otherwise one typo strands you with no way back. */
+/* A hard-coded DB_URL wins, so a stale localStorage value can't strand anyone.
+   Blank means browser-configured, and then the URL has to stay changeable. */
 const canSetDb = () => !DB_URL;
 
 /* ---------- helpers ---------- */
@@ -639,8 +604,8 @@ const el = (t,c,h) => { const n=document.createElement(t); if(c)n.className=c; i
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const byId = id => DATA.tasks.find(t=>t.id===id);
 const boardTasks = k => DATA.tasks.filter(t=>t.board===k);
-/* Evidence links are user input and non-verifiers now see them as real anchors.
-   Only ever link http(s) - a "javascript:" link would otherwise run on click. */
+/* Evidence links are user input and non-verifiers see them as real anchors,
+   so only http(s) ever becomes an href. */
 const safeUrl = u => /^https?:\/\//i.test(String(u||'').trim()) ? String(u).trim() : '';
 const stars = n => (n.match(/\**$/)||[''])[0];
 const clean = n => n.replace(/\*+$/,'').trim();
@@ -648,18 +613,16 @@ const clean = n => n.replace(/\*+$/,'').trim();
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),2600); }
 
 /* ---------- progress access ----------
-   What you see = what the database said, with any not-yet-published local edit on
-   top. Publishing clears the overlay; a failed publish leaves it in place so
-   nothing is silently lost. */
+   What you see is the database plus any edit that hasn't saved yet. Always read
+   through prog(); reaching into DATA.progress skips the unsaved layer. */
 const prog = id => ({...PROG(), ...(DATA.progress[id]||{}), ...(LOCAL[id]||{})});
 const isDone    = id => prog(id).status==='verified';
 const isPending = id => prog(id).status==='pending';
-/* screenshots logged is derived, never stored: it's how many slots have a link */
+/* derived, never stored: how many slots have a link */
 const linkCount = p => p.slots.filter(s=>s.link && s.link.trim()).length;
 
-/* An either/or tile carries one slot per part of EVERY route - you fill in
-   whichever route you actually did, and the tile's evidence is complete as soon
-   as ONE route is. So its slot budget is the sum of the routes, not `ss`. */
+/* Either/or tiles carry a slot per part of every route. Fill in whichever one
+   you actually did; the tile is done as soon as one route is. */
 const slotCount = t => t.alts.length ? t.alts.reduce((n,a)=>n+a.parts.length, 0) : t.ss;
 
 function evidence(t, s){
@@ -676,21 +639,19 @@ function evidence(t, s){
                  done:got===a.parts.length});
     off += a.parts.length;
   }
-  /* show whichever route is closest to finishing - that's the true progress */
+  /* whichever route is closest to done - that's the honest progress */
   const best = routes.reduce((x,y)=>
     (y.done && !x.done) || (!x.done && !y.done && y.got > x.got) ? y : x, routes[0]);
   return {count:best.got, need:best.total, done:routes.some(r=>r.done), routes, best};
 }
-/* a session still worth showing: in the future, or within the last hour */
+/* still worth showing: in the future, or within the last hour */
 const upcoming = x => new Date(x.when).getTime() > Date.now() - 3600e3;
 const hasSession = s => s.sessions.some(upcoming);
 const newSessionId = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 
-/* Show who is ON the tile until it's verified - swapping to the credited names
-   early hides whether anyone is still working it. Credit only takes over once the
-   tile is done. "+N" rather than a wall of names.
-   toArray, not s.by directly: records hand-edited in the Firebase console can
-   arrive as a bare string or a numeric-key object. */
+/* Assignees until it's verified, then the credited names. Switching earlier
+   would hide whether anyone is still working it. toArray because records
+   hand-edited in the Firebase console arrive as strings or numeric-key objects. */
 function who(s){
   const by = toArray(s.by), assigned = toArray(s.assigned);
   const credit = s.status === 'verified' && by.length > 0;
@@ -708,10 +669,8 @@ function tallyNames(names){
 }
 const picksOf = slots => tallyNames(slots.map(s=>s.opt));
 
-/* A field only counts as a change if it actually differs from what's published.
-   Without this, typing into a box and deleting it again — or stepping a counter
-   up and back down — leaves a phantom "1 unpublished change" that nothing but
-   Publish or Discard can clear. Undoing an edit by hand must undo the change. */
+/* Only count a field if it differs from what's saved. Otherwise typing into a
+   box and deleting it again leaves a phantom change nothing can clear. */
 const same = (a,b) => JSON.stringify(a===undefined?null:a) === JSON.stringify(b===undefined?null:b);
 function patch(id, fields){
   const base = DATA.progress[id] || PROG();
@@ -728,7 +687,6 @@ function revert(id){
 }
 const unpublished = () => Object.keys(LOCAL).length;
 
-/* ---------- what exactly is unpublished ---------- */
 const FIELD_LABEL = {status:'Status', assigned:'Assigned to', by:'Credited', note:'Notes', slots:'Evidence'};
 function showVal(k, v){
   if(k==='status') return (STAT[v]||['—'])[0];
@@ -751,7 +709,7 @@ function changeList(){
   });
 }
 
-/* ---------- bin payload -> usable data ---------- */
+/* ---------- incoming data ---------- */
 function normalize(raw){
   if(!raw || typeof raw!=='object') throw new Error('bin is not a JSON object');
   if(!Array.isArray(raw.tasks) || !raw.tasks.length) throw new Error('bin has no tasks[]');
@@ -765,14 +723,12 @@ function normalize(raw){
                              subs:toArray(t.subs),
                              pool:toArray(t.pool),
                              poolMax:Math.max(1, +t.poolMax||1),
-                             /* either/or tiles: each entry is one acceptable route */
                              alts:toArray(t.alts).map(a=>({label:String((a&&a.label)||''),
                                                            parts:toArray(a&&a.parts).map(String)}))
                                   .filter(a=>a.label && a.parts.length)}));
   const src = raw.progress || {};
   const roster = new Set(d.players.map(p=>p.name));
-  /* accept a legacy single name, an array, or Firebase's numeric-key object;
-     drop unknown players, duplicates, and anything past the cap */
+  /* legacy single name, array, or numeric-key object; drop unknowns and cap */
   const people = (v, cap) => {
     const list = typeof v === 'string' ? (v?[v]:[]) : toArray(v);
     return [...new Set(list.filter(Boolean).map(String).filter(n=>roster.has(n)))].slice(0, cap);
@@ -800,7 +756,7 @@ function normalize(raw){
     const want = slotCount(t);                        // sum of routes on either/or tiles
     slots.length = want;
     for(let i=0;i<want;i++) if(!slots[i]) slots[i]=SLOT();
-    /* an option that's no longer in the pool, or used past its cap, is dropped */
+    /* drop an option that left the pool or blew its cap */
     const seen = {};
     if(t.pool.length) for(const s of slots){
       if(!s.opt) continue;
@@ -814,8 +770,7 @@ function normalize(raw){
   return d;
 }
 
-/* every scoring line: rows, columns and both diagonals on each board.
-   Completing a line doubles it, i.e. pays its point total a second time. */
+/* Every scoring line. Completing one pays its points a second time. */
 function buildLines(){
   const out=[];
   for(const b of DATA.boards){
@@ -842,7 +797,7 @@ function dbErr(status, body){
   return `database returned ${status}${t?': '+t:''}`;
 }
 
-/* Typing shouldn't fire a write per keystroke even with headroom to spare. */
+/* debounce typing, or a note costs one write per keystroke */
 const TYPING = 700;
 let saveTimer = null;
 function autosave(delay=0){ clearTimeout(saveTimer); saveTimer = setTimeout(flush, delay); }
@@ -875,12 +830,9 @@ async function refresh({quiet=false}={}){
   }finally{ busy=false; setSync(); }
 }
 
-/* Publish the local overlay.
-   PATCH /progress.json replaces only the tiles named in the body and leaves
-   every other tile alone, server-side. That is why there's no read-modify-write
-   here and no way to clobber someone else's submission - the old whole-document
-   POST could, this cannot. Each tile is sent whole, so a partial edit can't
-   drop the fields it didn't touch. */
+/* PATCH /progress.json only touches the tiles named in the body, so there's no
+   read-modify-write and no way to clobber someone else's edit. Send each tile
+   whole - PATCH replaces a named child outright. */
 async function publish({quiet=false}={}){
   if(!unpublished()) return true;
   if(!dbRoot()){ askDb(); return false; }
@@ -934,7 +886,7 @@ function score(){
   for(const t of DATA.tasks){
     const s=prog(t.id), ev=evidence(t,s);
     maxBase+=t.points; maxSs+=t.ss;
-    /* a finished route counts as the whole tile's evidence, so 156 stays reachable */
+    /* a finished route counts as the whole tile, so 156 stays reachable */
     ss += ev.done ? t.ss : Math.min(ev.count, t.ss);
     if(s.status==='verified'){ base+=t.points; done++; }
     else if(s.status==='pending') pend++;
@@ -976,9 +928,7 @@ function header(){
   }
 }
 
-/* ---------- who am I ----------
-   No accounts here; this is just a name so sign-ups can say who's coming.
-   Same honour system as verifier mode. */
+/* ---------- who am I ---------- */
 function identity(){
   const sel=$('#me'); if(!sel) return;
   if(sel.dataset.built!=='1'){
@@ -993,7 +943,6 @@ function identity(){
   sel.value = ME;
   $('#meWrap').classList.toggle('unset', !ME);
   $('#meRole').innerHTML = isVerifier() ? '<span class="vbadge">verifier</span>' : '';
-  /* assignment tools follow the same rule as the drawer */
   for(const id of ['suggest','clearAssign']){ const n=$('#'+id); if(n) n.disabled=!isVerifier(); }
   const sd=$('#setDb'); if(sd) sd.style.display = canSetDb() ? '' : 'none';
 }
@@ -1001,14 +950,28 @@ function identity(){
 /* ---------- strip ---------- */
 function strip(){
   const x=score();
-  $('#strip').innerHTML=[
+  const cells=[
     ['Points earned',`${x.pts}<small> / ${x.maxPts}</small>`, x.pts/x.maxPts, ''],
     ['Tiles verified',`${x.done}<small> / ${x.total}</small>`, x.done/x.total, 'p'],
-    ['Awaiting verification',`${x.pend}`, x.pend/x.total, 'j'],
     ['Lines doubled',`${x.rowsLit}<small> / ${x.rowsTotal}</small>`, x.rowsLit/x.rowsTotal, ''],
     ['Screenshots logged',`${x.ss}<small> / ${x.maxSs}</small>`, x.ss/x.maxSs, 'j']
   ].map(([k,v,p,c])=>`<div class="stat"><div class="stat-k">${k}</div><div class="stat-v">${v}</div>
-      <div class="bar ${c}"><i style="width:${(Math.min(1,p||0)*100).toFixed(1)}%"></i></div></div>`).join('');
+      <div class="bar ${c}"><i style="width:${(Math.min(1,p||0)*100).toFixed(1)}%"></i></div></div>`);
+  $('#strip').innerHTML = mvpCell() + cells.join('');
+}
+
+/* Top three by credited points. */
+function mvpCell(){
+  const top = standings().slice(0,3);
+  const body = (!top.length || !top[0].pts)
+    ? '<div class="mvp-none">Nobody on the board yet</div>'
+    : `<ol class="mvp-list">${top.map((r,i)=>`
+        <li${r.name===ME?' class="mvp-me"':''}><span class="mvp-rank">${
+            i>0 && top[i-1].pts===r.pts ? '' : i+1}</span>
+          <span class="mvp-name">${esc(r.name)}</span>
+          <span class="mvp-pts">${r.pts}</span>
+        </li>`).join('')}</ol>`;
+  return `<div class="stat"><div class="stat-k">MVP</div>${body}</div>`;
 }
 
 /* ---------- sync line + banner ---------- */
@@ -1033,13 +996,11 @@ function setSync(msg){
   const r=$('#refresh'); if(r){ r.disabled=busy; r.textContent=busy?'Working…':'Refresh'; }
 }
 
-/* Nothing here happens on its own - these banners are the only thing telling you
-   how stale the board is and whether your work has left this browser. */
+/* Only exceptional states get a banner. The toolbar carries "refreshed 5m ago",
+   so a healthy board shows nothing here at all. */
 function banner(){
   const host=$('#banner'); if(!host) return;
   const n=unpublished(), out=[];
-  /* Only exceptional states get a banner now - the toolbar carries the routine
-     "refreshed 5m ago", so a healthy board shows nothing here at all. */
   if(!dbRoot()){
     out.push(`<div class="banner bad"><b>No database connected.</b>
       This is a bundled snapshot. Nothing you do here is shared.
@@ -1066,7 +1027,7 @@ function banner(){
   host.innerHTML = out.join('');
 }
 
-/* Exactly what Publish would send, field by field, with a per-tile undo. */
+/* what didn't save, field by field, with a per-tile undo */
 function diffPanel(){
   const cs = changeList();
   if(!cs.length) return '';
@@ -1100,8 +1061,8 @@ function boards(){
       for(const t of row){
         const s=prog(t.id), done=s.status==='verified', pend=s.status==='pending';
         if(hideDone && done) { g.appendChild(el('div','tile dim','')); continue; }
-        /* Red means nobody owns it. A tile can have evidence on it and still be
-           unassigned - that's worth flagging, not hiding. */
+        /* Red means nobody owns it. A tile can hold evidence and still be unassigned,
+           which is worth flagging rather than hiding. */
         const state = done ? 'done' : s.assigned.length ? 'active' : 'none';
         const btn=el('button','tile st-'+state+(done?' done':'')+(pend?' pending':'')+(onDiag(t.id)?' ondiag':''));
         btn.type='button';
@@ -1119,10 +1080,8 @@ function boards(){
             ].filter(Boolean);
             return f.length?`<div class="flags">${f.join('')}</div>`:'';})()}
           ${(()=>{
-            /* Named parts are a small closed set, so the useful question is what's
-               LEFT. Pool tiles have 15 interchangeable options, so "left" is
-               meaningless - what matters is what's already banked, so nobody
-               repeats a run. Plain counted tiles have nothing worth naming. */
+            /* Named parts: show what's left. Pool tiles: show what's banked, since any
+               option counts but a repeat wastes a slot. Plain counts get nothing. */
             const filled = i => !!(s.slots[i] && s.slots[i].link && s.slots[i].link.trim());
             if(ev.routes.length) return '';                 // each route names its own
             if(t.pool.length){
@@ -1139,8 +1098,7 @@ function boards(){
             }
             return '';})()}
           ${ev.routes.length
-            /* Show BOTH routes. Only showing the leading one hides that someone
-               has partial progress down the other path. */
+            /* both routes - showing only the leading one hides progress on the other */
             ? `<div class="troutes">${ev.routes.map((r,ri)=>`
                 ${ri?'<div class="tr-or">or</div>':''}
                 <div class="troute${r.done?' got':''}" title="${esc(r.parts.join(' + '))}">
@@ -1206,12 +1164,10 @@ const when = iso => { if(!iso) return ''; const d=new Date(iso);
 function openTile(id){
   cur=id; const t=byId(id), s=prog(id);
   const bn=(DATA.boards.find(b=>b.key===t.board)||{}).name||t.board;
-  /* once verified, only a verifier can change it - everyone else sees it read-only */
-  /* Verifiers record progress; everyone else reads. The one exception is session
-     sign-ups below, which stay open to the whole clan. */
+  /* Verifiers record progress, everyone else reads. Sign-ups below are the
+     exception and stay open to the whole clan. */
   const canEdit = isVerifier();
-  /* Non-verifiers can still put themselves on a tile - just themselves, and only
-     if there's room. Everything else about the tile stays read-only for them. */
+  /* Non-verifiers can add themselves, and only themselves. */
   const canSelfAssign = !canEdit && !!ME;
   const selfBlocked = canSelfAssign && !s.assigned.includes(ME) && s.assigned.length >= MAX_ASSIGNED;
   $('#drId').textContent=`${id} · ${bn} · row ${t.row}, col ${t.col}`;
@@ -1230,7 +1186,7 @@ function openTile(id){
     s.verifiedAt ?`Verified ${when(s.verifiedAt)}${s.verifiedBy?' by '+esc(s.verifiedBy):''}`:''
   ].filter(Boolean);
 
-  /* a 16-player toggle grid, tinted by how each player rated this tile */
+  /* 16 chips, tinted by how each player rated the tile */
   const picker = (kind, chosen, capped) => DATA.players.map(p=>{
     const r = rateOf(t,p.name), on = chosen.includes(p.name);
     const mayToggle = canEdit || (kind==='assigned' && canSelfAssign && p.name===ME);
@@ -1240,7 +1196,7 @@ function openTile(id){
       <span class="pname">${esc(p.name)}</span><i class="dot ${r?RATE[r][1]:''}"></i></button>`;
   }).join('');
 
-  /* Non-verifiers see what's recorded, not a wall of disabled inputs. */
+  /* what's recorded, rather than a wall of disabled inputs */
   const evidenceRead = () => {
     const rows = s.slots
       .map((sl,i)=>({sl, i, label: t.pool.length ? sl.opt : (t.subs[i] || 'Screenshot '+(i+1))}))
@@ -1274,8 +1230,7 @@ function openTile(id){
     </div>`;
   };
 
-  /* Either/or tiles get one block per route. Fill in the one you actually did -
-     finishing any single route completes the tile. */
+  /* one block per route; finishing either completes the tile */
   const slotRows = () => {
     const ev = evidence(t, s);
     if(!ev.routes.length) return s.slots.map((_,i)=>oneSlot(i, null)).join('');
@@ -1377,22 +1332,20 @@ function openTile(id){
       <div class="chips">${cands(t).length?cands(t).map(c=>
         `<span class="chip ${RATE[c.r][1]}" title="${RATE[c.r][0]}">${RATE[c.r][2]} ${esc(c.name)}</span>`).join(''):'<span class="note">Nobody wants this one.</span>'}</div></div>`;
 
-  /* field edits stay local until something is submitted or verified.
-     soft() never redraws the drawer - it runs on every keystroke and would
-     steal focus. Anything that changes other rows re-opens the drawer instead. */
+  /* soft() never redraws the drawer. It runs on every keystroke and would steal
+     focus, so anything that changes other rows calls redraw() instead. */
   const soft=()=>{ strip(); boards(); banner(); if(view==='draft')draft(); };
-  /* every edit writes; `delay` only exists so typing doesn't fire per keystroke */
+  /* every edit writes; delay only exists so typing doesn't fire per keystroke */
   const set=(f,delay=0)=>{ Object.assign(s,f); patch(id,f); soft(); autosave(delay); };
   const setSlot=(i,f,delay=0)=>{ const next=s.slots.map((x,j)=>j===i?{...x,...f}:x);
                          s.slots=next; patch(id,{slots:next}); autosave(delay); };
-  /* redraw the drawer without throwing away where the reader had scrolled to */
+  /* redraw without losing the reader's scroll position */
   const redraw=()=>{ const y=$('#drBody').scrollTop; openTile(id); $('#drBody').scrollTop=y; };
 
   const pick=e=>{
     const b=e.target.closest('.sub'); if(!b||b.disabled) return;
     const kind=b.dataset.kind, name=b.dataset.n;
-    /* the disabled attribute already covers this; re-check so a stray click or a
-       poked-at DOM can't assign somebody else on a non-verifier's behalf */
+    /* re-checked here so a poked-at DOM can't assign somebody else */
     if(!canEdit && !(kind==='assigned' && name===ME)) return;
     const next=s[kind].slice(), i=next.indexOf(name);
     if(i<0){
@@ -1401,7 +1354,7 @@ function openTile(id){
       next.push(name);
     } else next.splice(i,1);
     set({[kind]:next});
-    redraw();                       /* caps and disabled states just moved */
+    redraw();                       
   };
   if(canEdit || canSelfAssign) $('#pickAssigned').onclick=pick;
 
@@ -1416,7 +1369,6 @@ function openTile(id){
     $('#slots').addEventListener('change', e=>{
       const sel=e.target.closest('.slot-opt'); if(!sel) return;
       setSlot(+sel.dataset.i, {opt:sel.value});
-      /* every other row's cap availability just changed, so redraw them */
       soft(); redraw();
     });
   }
@@ -1450,12 +1402,12 @@ function openTile(id){
     redraw(); toast('Session proposed');
   };
 
-  /* status changes are local too - nothing leaves the browser until Publish */
+  /* status changes save like everything else */
   const act=(f,msg)=>{ Object.assign(s,f); patch(id,f); renderAll(); openTile(id); toast(msg); autosave(0); };
   const now = () => new Date().toISOString();
   const sub=$('#submit'); if(sub) sub.onclick=()=>{
     if(!linkCount(s)) return toast('Add an evidence link first');
-    /* a verifier entering a tile IS the verification - no pending round trip */
+    /* a verifier filling this in IS the verification, so no pending step */
     act({status:'verified', submittedAt:now(), submittedBy:(s.by.length?s.by:s.assigned).join(', '),
          verifiedAt:now(), verifiedBy:ME},
         'Verified');
@@ -1543,9 +1495,8 @@ function suggest(){
 }
 
 /* ---------- EHB, from WiseOldMan ----------
-   Third-party, so it is never fetched automatically: 16 players is 16 requests
-   against a 20-per-minute limit, and hammering someone else's free API on page
-   load would be rude. One button, throttled, cached in this browser. */
+   20 requests a minute and we have 16 players, so this only runs on a button
+   press, spaces the calls out, and caches the result in this browser. */
 const WOM = 'https://api.wiseoldman.net/v2';
 const KEY_EHB = 'vengienz-bingo-2026:ehb';
 let EHB = {rows:{}, at:0, window:''};
@@ -1625,9 +1576,7 @@ function ehbTable(){
 }
 
 /* ---------- multi-tile breakdown ----------
-   Every tile that needs more than one piece of evidence, with the pieces still
-   missing spelled out. Named parts come from `subs`; either/or tiles list their
-   routes; pool tiles show which options have been picked. */
+   Every tile needing more than one screenshot, with the missing pieces named. */
 let mtHideDone = false;
 
 function partLabel(t, sl, i){
@@ -1686,11 +1635,10 @@ function multi(){
 }
 
 /* ---------- roster ---------- */
-/* Points per player from the tiles they're credited on. Everyone credited gets the
-   tile's full value, so the column deliberately sums past the team's 147 - it ranks
-   contribution, it isn't a division of the team score. */
-function leaderboard(){
-  const rows = DATA.players.map(p=>{
+/* Everyone credited gets the tile's full points, so this column sums past 147.
+   It ranks contribution; it isn't a split of the team score. */
+function standings(){
+  return DATA.players.map(p=>{
     let pts=0, tiles=0, pend=0, pendPts=0, assigned=0;
     for(const t of DATA.tasks){
       const s=prog(t.id);
@@ -1701,6 +1649,10 @@ function leaderboard(){
     }
     return {name:p.name, pts, tiles, pend, pendPts, assigned};
   }).sort((a,b)=>b.pts-a.pts || b.tiles-a.tiles || a.name.localeCompare(b.name));
+}
+
+function leaderboard(){
+  const rows = standings();
   const max = Math.max(1, ...rows.map(r=>r.pts));
   $('#leadTbl').innerHTML = rows.map((r,i)=>{
     const tied = i>0 && rows[i-1].pts===r.pts && rows[i-1].tiles===r.tiles;
@@ -1761,7 +1713,7 @@ $('#mtToggle').onclick=e=>{ mtHideDone=!mtHideDone;
   e.target.textContent = mtHideDone?'Show finished':'Hide finished'; multi(); };
 $('#setDb').onclick=askDb;
 
-/* Follows the OS preference until someone picks a side, then remembers it. */
+/* follows the OS until someone picks a side, then remembers it */
 function setTheme(t){
   THEME = t==='light' ? 'light' : 'dark';
   ls.set(KEY_THEME, THEME);
@@ -1790,7 +1742,7 @@ $('#banner').onclick=e=>{
     if(!confirm(`Throw away ${n} change${n===1?'':'s'}?\n\n`
                 +"Can't be undone. Hit Review first if you want to look.")) return;
     LOCAL={}; ls.set(KEY_LOCAL,LOCAL); showDiff=false; lastError='';
-    renderAll(); if(cur) openTile(cur);   /* an open drawer would otherwise show discarded values */
+    renderAll(); if(cur) openTile(cur);   /* an open drawer would still be showing the discarded values */
     toast(`Discarded ${n} change${n===1?'':'s'}`);
   }
 };
@@ -1804,7 +1756,7 @@ $('#banner').onclick=e=>{
   setTheme(ls.get(KEY_THEME, '')
            || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
 
-  /* paint immediately from the last known copy - Refresh is what goes to the network */
+  /* paint from the last known copy; Refresh is what goes to the network */
   let start = ls.get(KEY, null);
   try{ RAW = start||SEED; adopt(normalize(RAW)); }
   catch(e){ console.warn('[db] cached copy unusable, falling back to seed:', e);
@@ -1815,13 +1767,11 @@ $('#banner').onclick=e=>{
 
   show('board'); renderAll();
 
-  /* No fetch on load and no background polling - Refresh and Publish are the only
-     things that touch the network. The banners carry the staleness. */
+  /* nothing fetches on load and nothing polls */
   setInterval(()=>{ if(!busy){ setSync(); banner(); } }, 30000);
 })();
 
-/* the local overlay is the only copy of unpublished work - don't let it go quietly */
-/* Only fires if a write failed - in the normal case there is nothing outstanding. */
+/* a failed write exists nowhere else, so don't let the tab go quietly */
 window.addEventListener('beforeunload', e=>{ if(unpublished()){ e.preventDefault(); e.returnValue=''; } });
 </script>
 </body>
