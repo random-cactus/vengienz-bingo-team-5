@@ -42,7 +42,10 @@ a{color:var(--gold)}
 .title{font-family:"Pixelify Sans",sans-serif;font-size:clamp(30px,5vw,50px);line-height:1;font-weight:700;margin-top:8px;
   background:linear-gradient(180deg,#FFD98A,#FFB020 55%,#B4770F);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lede{color:var(--muted);font-size:13.5px;margin-top:9px}
-.clock{margin-left:auto;text-align:right}
+.clock{text-align:right}
+.me{margin-left:auto;text-align:right}
+.me select{width:auto;min-width:158px;font-size:12.5px;padding:6px 9px;margin-top:6px}
+.me.unset select{border-color:var(--amber);color:var(--amber)}
 .clock-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .clock-val{display:flex;gap:10px;margin-top:6px;justify-content:flex-end}
 .cu{background:var(--raise);border:1px solid var(--line);border-radius:var(--r);padding:7px 11px;min-width:62px;text-align:center}
@@ -106,7 +109,24 @@ a{color:var(--gold)}
 .tile.pending .tbar i{background:var(--amber)}
 .tile.dim{opacity:.45}
 .flag{font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--amber);border:1px solid rgba(208,138,46,.45);border-radius:2px;padding:1px 4px;align-self:flex-start}
+  color:var(--amber);border:1px solid rgba(208,138,46,.45);border-radius:2px;padding:1px 4px}
+.flags{display:flex;gap:4px;flex-wrap:wrap}
+.flag.sess{color:var(--gold);border-color:rgba(255,176,32,.45)}
+
+/* ---------- sign-up sessions ---------- */
+.sess{display:flex;flex-direction:column;gap:8px;margin-bottom:11px}
+.sess-row{border:1px solid var(--line);border-left:2px solid var(--gold-dim);border-radius:var(--r);
+  padding:9px 11px;background:var(--ink)}
+.sess-row.past{opacity:.45}
+.sess-row.mine{border-left-color:var(--gold)}
+.sess-when{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--gold)}
+.sess-meta{font-size:11.5px;color:var(--muted);margin:3px 0 7px}
+.sess-act{display:flex;gap:6px;margin-top:8px;align-items:center}
+.sess-act .btn{padding:5px 10px}
+.sess-new{display:flex;flex-direction:column;gap:6px;border-top:1px dashed var(--line);padding-top:10px}
+.lead-bar{display:inline-block;width:110px;height:5px;background:var(--raise2);border-radius:2px;overflow:hidden;vertical-align:middle}
+.lead-bar i{display:block;height:100%;background:var(--gold)}
+tbody tr[data-open]{cursor:pointer}
 .risk{position:absolute;top:0;right:0;width:0;height:0;border-top:11px solid var(--rust);border-left:11px solid transparent}
 
 /* seam rail - rows pay, columns don't */
@@ -193,7 +213,7 @@ tbody tr:hover{background:var(--raise)}
 .dr-close:hover{color:var(--text)}
 .field{margin-bottom:16px}
 .flabel{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-input[type=text],input[type=url],select,textarea{width:100%;background:var(--ink);border:1px solid var(--line);
+input[type=text],input[type=url],input[type=datetime-local],select,textarea{width:100%;background:var(--ink);border:1px solid var(--line);
   color:var(--text);padding:8px 10px;border-radius:var(--r);font:inherit;font-size:13.5px}
 textarea{resize:vertical;min-height:62px}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
@@ -289,6 +309,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
       <h1 class="title">Summer Bingo 2026</h1>
       <div class="lede" id="window">-</div>
     </div>
+    <div class="me" id="meWrap">
+      <div class="clock-label">You are</div>
+      <select id="me"></select>
+    </div>
     <div class="clock">
       <div class="clock-label" id="clockLabel">Starts in</div>
       <div class="clock-val" id="clock"></div>
@@ -347,6 +371,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
       <div class="note" style="margin-bottom:10px">Every line pays its own total again when you complete it. Ranked by bonus per tile still outstanding - the cheapest doubling first.</div>
       <table><thead><tr><th>Line</th><th>Board</th><th class="num">Bonus</th><th class="num">Left</th><th class="num">Pts / tile left</th><th>Outstanding</th></tr></thead><tbody id="lineTbl"></tbody></table>
     </div>
+    <div class="panel" style="margin-bottom:16px">
+      <h3>Upcoming sessions</h3>
+      <div class="note" style="margin-bottom:10px">Times people proposed to run a tile together. Click a row to open the tile and join.</div>
+      <table><thead><tr><th>When</th><th>Tile</th><th>Host</th><th class="num">In</th><th>Who's coming</th></tr></thead><tbody id="sessTbl"></tbody></table>
+    </div>
     <div class="panel">
       <h3>Every tile - who's up for it</h3>
       <table><thead><tr><th>Tile</th><th class="num">Pts</th><th class="num">SS</th><th>Assigned</th><th>Best candidates</th></tr></thead><tbody id="draftTbl"></tbody></table>
@@ -360,6 +389,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
       <select id="sortBy" style="width:auto"><option value="board">Board order</option><option value="scarce">Fewest volunteers</option><option value="pts">Highest points</option></select>
       <span class="spacer"></span>
       <span class="note">Ratings come straight from the PvM &amp; Collector board tabs.</span>
+    </div>
+    <div class="panel" style="margin-bottom:18px">
+      <h3>Standings - points by player</h3>
+      <div class="note" style="margin-bottom:10px">Points from <em>verified</em> tiles each player is credited on.
+        Everyone credited on a tile gets its full points, so these totals overlap - they measure contribution,
+        not a split of the 147.</div>
+      <table><thead><tr><th class="num">#</th><th>Player</th><th class="num">Tiles</th><th class="num">Points</th>
+        <th></th><th class="num">Pending</th><th class="num">Assigned</th></tr></thead><tbody id="leadTbl"></tbody></table>
     </div>
     <div class="heat-wrap"><table class="heat" id="heat"></table></div>
     <div class="legend">
@@ -416,6 +453,7 @@ const KEY       = 'vengienz-bingo-2026';         // last good snapshot
 const KEY_META  = 'vengienz-bingo-2026:meta';    // {fetchedAt, dbUrl}
 const KEY_LOCAL = 'vengienz-bingo-2026:local';   // edits not yet published
 const KEY_ADMIN = 'vengienz-bingo-2026:admin';
+const KEY_ME    = 'vengienz-bingo-2026:me';      // which player you are, for sign-ups
 
 /* A tile is open -> pending (someone submitted proof) -> verified (an admin
    accepted it). Only 'verified' scores. */
@@ -427,7 +465,7 @@ const KEY_ADMIN = 'vengienz-bingo-2026:admin';
      by       - who actually gets credit once it's done (outcome)
    They overlap in practice but aren't the same thing, and only assignment is capped. */
 const MAX_ASSIGNED = 8;
-const PROG = () => ({status:'open',assigned:[],by:[],note:'',slots:[],
+const PROG = () => ({status:'open',assigned:[],by:[],note:'',slots:[],sessions:[],
                      submittedAt:'',submittedBy:'',verifiedAt:'',verifiedBy:''});
 const SLOT = () => ({opt:'',link:''});
 const STATUSES = ['open','pending','verified'];
@@ -439,7 +477,7 @@ const toArray = v => Array.isArray(v) ? v
 
 /* ---------- state ---------- */
 let DATA=null, RAW=null, LINES=[], view='board', hideDone=false, sortBy='board';
-let LOCAL={}, ADMIN=false, META={fetchedAt:0,dbUrl:''}, busy=false, lastError='', showDiff=false;
+let LOCAL={}, ADMIN=false, META={fetchedAt:0,dbUrl:''}, busy=false, lastError='', showDiff=false, ME='';
 
 /* ---------- storage ---------- */
 const ls = {
@@ -477,6 +515,11 @@ const isDone    = id => prog(id).status==='verified';
 const isPending = id => prog(id).status==='pending';
 /* screenshots logged is derived, never stored: it's how many slots have a link */
 const linkCount = p => p.slots.filter(s=>s.link && s.link.trim()).length;
+/* a session still worth showing: in the future, or within the last hour */
+const upcoming = x => new Date(x.when).getTime() > Date.now() - 3600e3;
+const hasSession = s => s.sessions.some(upcoming);
+const newSessionId = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
 /* credit if there is any, otherwise who's lined up; "+N" rather than a wall of names */
 function who(s){
   /* toArray, not s.by directly: records hand-edited in the Firebase console can
@@ -568,6 +611,14 @@ function normalize(raw){
     if(!STATUSES.includes(p.status)) p.status='open';
     p.assigned = people(p.assigned, MAX_ASSIGNED);
     p.by       = people(p.by, roster.size);
+    p.sessions = toArray(p.sessions).map(x=>({
+        id:   String((x&&x.id)||''),
+        when: String((x&&x.when)||''),
+        by:   String((x&&x.by)||''),
+        note: String((x&&x.note)||''),
+        joined: people(x&&x.joined, roster.size)
+      })).filter(x=>x.id && x.when && !isNaN(new Date(x.when).getTime()))
+         .sort((a,b)=>a.when<b.when?-1:a.when>b.when?1:0);
 
     let slots = toArray(p.slots).map(s=>({opt:String((s&&s.opt)||''), link:String((s&&s.link)||'')}));
     if(!slots.length && p.link)                       // pre-slots: single link field
@@ -737,6 +788,24 @@ function header(){
   }
 }
 
+/* ---------- who am I ----------
+   No accounts here; this is just a name so sign-ups can say who's coming.
+   Same honour system as verifier mode. */
+function identity(){
+  const sel=$('#me'); if(!sel) return;
+  if(sel.dataset.built!=='1'){
+    sel.innerHTML = '<option value="">- pick your name -</option>'
+      + DATA.players.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+    sel.dataset.built='1';
+    sel.onchange=e=>{ ME=e.target.value; ls.set(KEY_ME,ME);
+                      renderAll(); if(cur) openTile(cur);
+                      toast(ME?`You are ${ME}`:'Name cleared'); };
+  }
+  if(!DATA.players.some(p=>p.name===ME)) ME='';   // roster changed under us
+  sel.value = ME;
+  $('#meWrap').classList.toggle('unset', !ME);
+}
+
 /* ---------- strip ---------- */
 function strip(){
   const x=score();
@@ -857,7 +926,9 @@ function boards(){
           ${risky?`<i class="risk" title="${nL} volunteer${nL===1?'':'s'}, ${nB} can't do it"></i>`:''}
           <div class="tile-top"><span class="tid">${t.id}</span><span class="pts">${t.points}</span></div>
           <div class="tname">${esc(clean(t.task))}<span style="color:var(--gold)">${stars(t.task)}</span></div>
-          ${pend?'<span class="flag">◈ pending</span>':''}
+          ${(()=>{const f=[pend?'<span class="flag">◈ pending</span>':'',
+                          hasSession(s)?'<span class="flag sess">◷ session</span>':''].filter(Boolean);
+                  return f.length?`<div class="flags">${f.join('')}</div>`:'';})()}
           <div class="tfoot">
             <span class="ss">${nl}/${t.ss}</span>
             <span class="tbar"><i style="width:${(pc*100).toFixed(0)}%"></i></span>
@@ -980,6 +1051,35 @@ function openTile(id){
       <textarea id="note" placeholder="Anything the verifier should know"${dis}>${esc(s.note)}</textarea></div>
 
     <div class="field">
+      <div class="flabel">Sessions - plan a time to try this together</div>
+      ${s.sessions.length?`<div class="sess">${s.sessions.map(x=>{
+        const past = new Date(x.when).getTime() < Date.now();
+        const inIt = ME && x.joined.includes(ME);
+        const mine = ME && x.by===ME;
+        return `<div class="sess-row${past?' past':''}${mine?' mine':''}">
+          <div class="sess-when">${esc(when(x.when))}${past?' <span class="note">(past)</span>':''}</div>
+          <div class="sess-meta">${x.by?`hosted by ${esc(x.by)} · `:''}${x.joined.length} coming${
+            x.note?` · ${esc(x.note)}`:''}</div>
+          <div class="chips">${x.joined.map(n=>
+            `<span class="chip ${n===ME?'gold':''}">${esc(n)}</span>`).join('')
+            || '<span class="note">nobody yet</span>'}</div>
+          ${locked?'':`<div class="sess-act">
+            ${ME?`<button class="btn" data-sess="${x.id}" data-do="${inIt?'leave':'join'}">${
+                    inIt?'Leave':"I'm in"}</button>`
+                :'<span class="note">pick your name at the top to join</span>'}
+            ${(ADMIN||mine)?`<button class="btn" data-sess="${x.id}" data-do="remove" title="Remove this session">Remove</button>`:''}
+          </div>`}
+        </div>`}).join('')}</div>`
+      :'<div class="note" style="margin-bottom:10px">No sessions planned yet.</div>'}
+      ${locked?'':`<div class="sess-new">
+        <input type="datetime-local" id="sessWhen">
+        <input type="text" id="sessNote" placeholder="Optional note - e.g. 'need 2 more for a trio'">
+        <button class="btn" id="sessAdd">Propose this time</button>
+        <div class="note">Times are shown to everyone in their own timezone.</div>
+      </div>`}
+    </div>
+
+    <div class="field">
       <div class="actions">
         ${s.status!=='verified'?`<button class="btn solid" id="submit">${s.status==='pending'?'Update submission':'Submit for verification'}</button>`:''}
         ${ADMIN&&s.status==='pending'?`<button class="btn done" id="verify">Verify</button>
@@ -1038,6 +1138,35 @@ function openTile(id){
     });
   }
 
+  const sessEl = $('#drBody').querySelector('.sess');
+  if(sessEl && !locked) sessEl.onclick = e=>{
+    const b=e.target.closest('[data-sess]'); if(!b) return;
+    const sid=b.dataset.sess, act=b.dataset.do;
+    let next = s.sessions.map(x=>({...x, joined:x.joined.slice()}));
+    if(act==='remove'){
+      if(!confirm('Remove this session? Anyone signed up loses it.')) return;
+      next = next.filter(x=>x.id!==sid);
+    } else {
+      if(!ME) return toast('Pick your name at the top first');
+      const x = next.find(y=>y.id===sid); if(!x) return;
+      const i = x.joined.indexOf(ME);
+      if(act==='join'){ if(i<0) x.joined.push(ME); } else if(i>=0) x.joined.splice(i,1);
+    }
+    set({sessions:next}); redraw();
+  };
+  const sAdd = $('#sessAdd');
+  if(sAdd) sAdd.onclick = ()=>{
+    if(!ME) return toast('Pick your name at the top so people know who is hosting');
+    const v=$('#sessWhen').value;
+    if(!v) return toast('Pick a date and time first');
+    const d=new Date(v);
+    if(isNaN(d.getTime())) return toast('That date and time is not valid');
+    set({sessions:[...s.sessions, {id:newSessionId(), when:d.toISOString(), by:ME,
+                                   note:$('#sessNote').value.trim(), joined:[ME]}]
+          .sort((a,b)=>a.when<b.when?-1:a.when>b.when?1:0)});
+    redraw(); toast('Session proposed - press Publish to share it');
+  };
+
   /* status changes are local too - nothing leaves the browser until Publish */
   const act=(f,msg)=>{ Object.assign(s,f); patch(id,f); renderAll(); openTile(id); toast(msg); };
   const sub=$('#submit'); if(sub) sub.onclick=()=>{
@@ -1085,6 +1214,21 @@ function draft(){
       <td><div class="chips">${left.slice(0,4).map(t=>{const a=prog(t.id).assigned;
         return `<span class="chip ${a.length?'p':''}" title="${esc(clean(t.task))}${a.length?' - '+esc(a.join(', ')):''}">${t.id}${a.length?' · '+esc(a[0])+(a.length>1?` +${a.length-1}`:''):''}</span>`}).join('')}${left.length>4?`<span class="chip">+${left.length-4}</span>`:''}</div></td></tr>`}).join('');
 
+  const up=[];
+  for(const t of DATA.tasks) for(const x of prog(t.id).sessions) if(upcoming(x)) up.push({t,x});
+  up.sort((a,b)=>a.x.when<b.x.when?-1:a.x.when>b.x.when?1:0);
+  $('#sessTbl').innerHTML = up.length ? up.slice(0,20).map(({t,x})=>`
+    <tr data-open="${t.id}">
+      <td class="mono" style="white-space:nowrap;color:var(--gold)">${esc(when(x.when))}</td>
+      <td>${esc(clean(t.task))} <span class="tid mono">${t.id}</span></td>
+      <td>${esc(x.by)||'<span class="note">-</span>'}</td>
+      <td class="num">${x.joined.length}</td>
+      <td><div class="chips">${x.joined.slice(0,6).map(n=>
+        `<span class="chip ${n===ME?'gold':''}">${esc(n)}</span>`).join('')}${
+        x.joined.length>6?`<span class="chip">+${x.joined.length-6}</span>`:''}</div></td>
+    </tr>`).join('')
+    : '<tr><td colspan="5" class="note">Nothing planned yet - open a tile and propose a time.</td></tr>';
+
   $('#draftTbl').innerHTML=rows.map(({t,L})=>{const s=prog(t.id);
     return `<tr><td>${esc(clean(t.task))} <span class="tid mono">${t.id}</span></td>
       <td class="num">${t.points}</td><td class="num">${t.ss}</td>
@@ -1111,7 +1255,37 @@ function suggest(){
 }
 
 /* ---------- roster ---------- */
+/* Points per player from the tiles they're credited on. Everyone credited gets the
+   tile's full value, so the column deliberately sums past the team's 147 - it ranks
+   contribution, it isn't a division of the team score. */
+function leaderboard(){
+  const rows = DATA.players.map(p=>{
+    let pts=0, tiles=0, pend=0, pendPts=0, assigned=0;
+    for(const t of DATA.tasks){
+      const s=prog(t.id);
+      if(s.assigned.includes(p.name)) assigned++;
+      if(!s.by.includes(p.name)) continue;
+      if(s.status==='verified'){ pts+=t.points; tiles++; }
+      else if(s.status==='pending'){ pendPts+=t.points; pend++; }
+    }
+    return {name:p.name, pts, tiles, pend, pendPts, assigned};
+  }).sort((a,b)=>b.pts-a.pts || b.tiles-a.tiles || a.name.localeCompare(b.name));
+  const max = Math.max(1, ...rows.map(r=>r.pts));
+  $('#leadTbl').innerHTML = rows.map((r,i)=>{
+    const tied = i>0 && rows[i-1].pts===r.pts && rows[i-1].tiles===r.tiles;
+    return `<tr>
+      <td class="num" style="color:var(--faint)">${tied?'':i+1}</td>
+      <td>${esc(r.name)}${r.name===ME?' <span class="chip gold">you</span>':''}</td>
+      <td class="num">${r.tiles||'<span class="note">-</span>'}</td>
+      <td class="num" style="color:${r.pts?'var(--gold)':'var(--faint)'}">${r.pts}</td>
+      <td><span class="lead-bar"><i style="width:${(r.pts/max*100).toFixed(1)}%"></i></span></td>
+      <td class="num">${r.pend?`<span class="chip a">${r.pend} · ${r.pendPts}p</span>`:'<span class="note">-</span>'}</td>
+      <td class="num" style="color:var(--muted)">${r.assigned}</td>
+    </tr>`}).join('');
+}
+
 function roster(){
+  leaderboard();
   let ts=DATA.tasks.slice();
   if(sortBy==='scarce') ts.sort((a,b)=>likers(a).length-likers(b).length||b.points-a.points);
   if(sortBy==='pts')    ts.sort((a,b)=>b.points-a.points);
@@ -1132,7 +1306,7 @@ function show(v){
   if(v==='draft')draft(); if(v==='roster')roster();
 }
 function renderAll(){
-  header(); strip(); boards(); banner(); setSync();
+  header(); identity(); strip(); boards(); banner(); setSync();
   if(view==='draft')draft(); if(view==='roster')roster();
 }
 
@@ -1146,6 +1320,8 @@ $('#clearAssign').onclick=()=>{
   DATA.tasks.forEach(t=>{ if(prog(t.id).assigned.length) patch(t.id,{assigned:[]}); });
   renderAll(); toast('Assignments cleared - press Publish to share');
 };
+
+$('#sessTbl').onclick=e=>{ const tr=e.target.closest('tr[data-open]'); if(tr) openTile(tr.dataset.open); };
 
 $('#refresh').onclick=()=>{
   if(unpublished() && !confirm(`You have ${unpublished()} unpublished change(s).\n\n`
@@ -1189,6 +1365,7 @@ $('#banner').onclick=e=>{
   META  = ls.get(KEY_META, META) || META;
   LOCAL = ls.get(KEY_LOCAL, {}) || {};
   ADMIN = !!ls.get(KEY_ADMIN, false);
+  ME    = String(ls.get(KEY_ME, '') || '');
 
   /* paint immediately from the last known copy - Refresh is what goes to the network */
   let start = ls.get(KEY, null);
