@@ -281,7 +281,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .slot{display:grid;gap:5px 8px;align-items:center;grid-template-columns:16px 118px minmax(0,1fr)}
 .slot.pool{grid-template-columns:16px minmax(0,1fr)}
 .slot.pool select,.slot.pool input{grid-column:2}
-.slot-n{color:var(--faint);font-size:11.5px;text-align:right}
+.slot-n{color:var(--muted);font-size:11.5px;text-align:right}
 .slot-label{font-size:13.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .slot input,.slot select{padding:6px 9px;font-size:12.5px}
 .slot input:placeholder-shown{border-color:var(--line)}
@@ -314,6 +314,37 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .load{display:flex;align-items:center;gap:8px}
 .loadbar{width:78px;height:4px;background:var(--raise2);border-radius:2px;overflow:hidden}
 .loadbar i{display:block;height:100%;background:var(--purple)}
+
+/* what's still missing (named parts) or already banked (pool tiles) */
+.tparts{font-size:12.5px;line-height:1.35;color:var(--text)}
+.tparts.done{color:var(--muted)}
+.tp-k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);margin-right:6px}
+
+/* both routes on the board tile, so alternate progress is visible */
+.troutes{margin-top:auto;display:flex;flex-direction:column;gap:2px}
+.troute{display:grid;grid-template-columns:auto minmax(0,1fr) 42px;gap:2px 8px;align-items:center}
+.tr-need{grid-column:2 / -1;font-size:12px;line-height:1.3;color:var(--text)}
+.tr-count{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;color:var(--muted)}
+.tr-label{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.troute.got .tr-count,.troute.got .tr-label{color:var(--ok)}
+.troute.got .tbar i{background:var(--ok)}
+.tr-or{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint);margin:1px 0 0 2px}
+
+/* ---------- either/or routes ---------- */
+.route{border:1px solid var(--line);border-radius:var(--r);padding:9px 11px 10px;background:var(--ink)}
+.route.got{border-color:var(--ok-bd);background:var(--ok-bg)}
+.route-head{display:flex;align-items:baseline;gap:8px;margin-bottom:7px;font-size:13.5px;color:var(--text)}
+.route-count{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12.5px;color:var(--gold)}
+.route-or{text-align:center;font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:7px 0}
+.mt-route{border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;margin-top:4px}
+.mt-route.got{border-color:var(--ok-bd)}
+.mt-rhead{display:flex;font-size:13px;color:var(--text);margin-bottom:4px}
+.mt-rhead span{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--gold)}
+.mt-or{text-align:center;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:5px 0}
 
 /* ---------- multi-tile breakdown ---------- */
 .mt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
@@ -608,6 +639,31 @@ const isDone    = id => prog(id).status==='verified';
 const isPending = id => prog(id).status==='pending';
 /* screenshots logged is derived, never stored: it's how many slots have a link */
 const linkCount = p => p.slots.filter(s=>s.link && s.link.trim()).length;
+
+/* An either/or tile carries one slot per part of EVERY route - you fill in
+   whichever route you actually did, and the tile's evidence is complete as soon
+   as ONE route is. So its slot budget is the sum of the routes, not `ss`. */
+const slotCount = t => t.alts.length ? t.alts.reduce((n,a)=>n+a.parts.length, 0) : t.ss;
+
+function evidence(t, s){
+  const has = i => !!(s.slots[i] && s.slots[i].link && s.slots[i].link.trim());
+  if(!t.alts.length){
+    const n = s.slots.filter((_,i)=>has(i)).length;
+    return {count:Math.min(n,t.ss), need:t.ss, done:n>=t.ss, routes:[], best:null};
+  }
+  let off = 0; const routes = [];
+  for(const a of t.alts){
+    const idx = a.parts.map((_,k)=>off+k);
+    const got = idx.filter(has).length;
+    routes.push({label:a.label, parts:a.parts, idx, got, total:a.parts.length,
+                 done:got===a.parts.length});
+    off += a.parts.length;
+  }
+  /* show whichever route is closest to finishing - that's the true progress */
+  const best = routes.reduce((x,y)=>
+    (y.done && !x.done) || (!x.done && !y.done && y.got > x.got) ? y : x, routes[0]);
+  return {count:best.got, need:best.total, done:routes.some(r=>r.done), routes, best};
+}
 /* a session still worth showing: in the future, or within the last hour */
 const upcoming = x => new Date(x.when).getTime() > Date.now() - 3600e3;
 const hasSession = s => s.sessions.some(upcoming);
@@ -627,12 +683,13 @@ function who(s){
   return `<div class="who${credit?'':' plan'}" title="${credit?'Credited':'Assigned'}: ${esc(list.join(', '))}">`
        + `${credit?'▸':'○'} ${esc(head)}${rest>0?` +${rest}`:''}</div>`;
 }
-/* "Zulrah, Zulrah, Inferno" -> "Zulrah x2, Inferno" */
-function picksOf(slots){
-  const tally={};
-  for(const s of slots) if(s.opt) tally[s.opt]=(tally[s.opt]||0)+1;
-  return Object.keys(tally).map(o=>tally[o]>1?`${o} x${tally[o]}`:o);
+/* ["Zulrah","Zulrah","Inferno"] -> ["Zulrah x2","Inferno"] */
+function tallyNames(names){
+  const t={};
+  for(const n of names) if(n) t[n]=(t[n]||0)+1;
+  return Object.keys(t).map(n=>t[n]>1?`${n} x${t[n]}`:n);
 }
+const picksOf = slots => tallyNames(slots.map(s=>s.opt));
 
 /* A field only counts as a change if it actually differs from what's published.
    Without this, typing into a box and deleting it again — or stepping a counter
@@ -723,8 +780,9 @@ function normalize(raw){
     let slots = toArray(p.slots).map(s=>({opt:String((s&&s.opt)||''), link:String((s&&s.link)||'')}));
     if(!slots.length && p.link)                       // pre-slots: single link field
       slots = [{opt:'', link:String(p.link)}];
-    slots.length = t.ss;                              // exactly one slot per screenshot
-    for(let i=0;i<t.ss;i++) if(!slots[i]) slots[i]=SLOT();
+    const want = slotCount(t);                        // sum of routes on either/or tiles
+    slots.length = want;
+    for(let i=0;i<want;i++) if(!slots[i]) slots[i]=SLOT();
     /* an option that's no longer in the pool, or used past its cap, is dropped */
     const seen = {};
     if(t.pool.length) for(const s of slots){
@@ -857,7 +915,10 @@ function askDb(){
 function score(){
   let base=0, maxBase=0, done=0, pend=0, ss=0, maxSs=0, bonus=0, maxBonus=0, rowsLit=0, rowsTotal=0;
   for(const t of DATA.tasks){
-    const s=prog(t.id); maxBase+=t.points; maxSs+=t.ss; ss+=Math.min(linkCount(s),t.ss);
+    const s=prog(t.id), ev=evidence(t,s);
+    maxBase+=t.points; maxSs+=t.ss;
+    /* a finished route counts as the whole tile's evidence, so 156 stays reachable */
+    ss += ev.done ? t.ss : Math.min(ev.count, t.ss);
     if(s.status==='verified'){ base+=t.points; done++; }
     else if(s.status==='pending') pend++;
   }
@@ -1027,7 +1088,7 @@ function boards(){
         const state = done ? 'done' : s.assigned.length ? 'active' : 'none';
         const btn=el('button','tile st-'+state+(done?' done':'')+(pend?' pending':'')+(onDiag(t.id)?' ondiag':''));
         btn.type='button';
-        const nl=linkCount(s), pc=t.ss?Math.min(1,nl/t.ss):0;
+        const ev=evidence(t,s), pc=ev.need?Math.min(1,ev.count/ev.need):0;
         const nL=likers(t).length, nB=blocked(t), risky=nL<=2||nB>=8;
         btn.innerHTML=`
           ${risky?`<i class="risk" title="${nL} volunteer${nL===1?'':'s'}, ${nB} can't do it"></i>`:''}
@@ -1040,10 +1101,46 @@ function boards(){
               hasSession(s)   ? '<span class="flag sess">&#9683; Session</span>' : ''
             ].filter(Boolean);
             return f.length?`<div class="flags">${f.join('')}</div>`:'';})()}
-          <div class="tfoot">
-            <span class="ss">${nl}/${t.ss}</span>
-            <span class="tbar"><i style="width:${(pc*100).toFixed(0)}%"></i></span>
-          </div>
+          ${(()=>{
+            /* Named parts are a small closed set, so the useful question is what's
+               LEFT. Pool tiles have 15 interchangeable options, so "left" is
+               meaningless - what matters is what's already banked, so nobody
+               repeats a run. Plain counted tiles have nothing worth naming. */
+            const filled = i => !!(s.slots[i] && s.slots[i].link && s.slots[i].link.trim());
+            if(ev.routes.length) return '';                 // each route names its own
+            if(t.pool.length){
+              const done = picksOf(s.slots.filter(x=>x.link && x.link.trim()));
+              if(!done.length) return '';
+              const head = done.slice(0,3).join(', '), rest = done.length-3;
+              return `<div class="tparts done" title="${esc(done.join(', '))}">
+                <span class="tp-k">Done</span> ${esc(head)}${rest>0?` +${rest} more`:''}</div>`;
+            }
+            if(t.subs.length){
+              const need = t.subs.filter((_,i)=>!filled(i));
+              if(!need.length) return '';
+              return `<div class="tparts"><span class="tp-k">Need</span> ${esc(need.join(', '))}</div>`;
+            }
+            return '';})()}
+          ${ev.routes.length
+            /* Show BOTH routes. Only showing the leading one hides that someone
+               has partial progress down the other path. */
+            ? `<div class="troutes">${ev.routes.map((r,ri)=>`
+                ${ri?'<div class="tr-or">or</div>':''}
+                <div class="troute${r.done?' got':''}" title="${esc(r.parts.join(' + '))}">
+                  <span class="tr-count">${r.got}/${r.total}</span>
+                  <span class="tr-label">${esc(r.label)}</span>
+                  <span class="tbar"><i style="width:${(r.got/r.total*100).toFixed(0)}%"></i></span>
+                  ${(()=>{ if(r.done) return '';
+                    const need = tallyNames(r.parts.filter((_,k)=>
+                      !(s.slots[r.idx[k]] && s.slots[r.idx[k]].link && s.slots[r.idx[k]].link.trim())));
+                    return need.length
+                      ? `<span class="tr-need"><span class="tp-k">Need</span> ${esc(need.join(', '))}</span>`
+                      : '';})()}
+                </div>`).join('')}</div>`
+            : `<div class="tfoot">
+                 <span class="ss">${ev.count}/${ev.need}</span>
+                 <span class="tbar"><i style="width:${(pc*100).toFixed(0)}%"></i></span>
+               </div>`}
           ${who(s)}`;
         btn.onclick=()=>openTile(t.id);
         g.appendChild(btn);
@@ -1142,7 +1239,8 @@ function openTile(id){
   };
 
   /* one row per required screenshot; pool tiles also pick which option it proves */
-  const slotRows = () => s.slots.map((sl,i)=>{
+  const oneSlot = (i, label) => {
+    const sl = s.slots[i] || SLOT();
     const opts = t.pool.map(o=>{
       const used = s.slots.filter((x,j)=>j!==i && x.opt===o).length;
       const full = used >= t.poolMax;
@@ -1150,14 +1248,28 @@ function openTile(id){
            + `${esc(o)}${used?` — ${used} of ${t.poolMax} used`:''}</option>`;
     }).join('');
     return `<div class="slot${t.pool.length?' pool':''}">
-      <span class="slot-n mono">${i+1}</span>
+      <span class="slot-n mono">${label==null?i+1:'&bull;'}</span>
       ${t.pool.length
         ? `<select class="slot-opt" data-i="${i}"${dis}><option value="">— pick one —</option>${opts}</select>`
-        : `<span class="slot-label">${esc(t.subs[i] || 'Screenshot '+(i+1))}</span>`}
+        : `<span class="slot-label">${esc(label!=null?label:(t.subs[i] || 'Screenshot '+(i+1)))}</span>`}
       <input type="url" class="slot-link" data-i="${i}" value="${esc(sl.link)}"
              placeholder="Discord or imgur link"${dis}>
     </div>`;
-  }).join('');
+  };
+
+  /* Either/or tiles get one block per route. Fill in the one you actually did -
+     finishing any single route completes the tile. */
+  const slotRows = () => {
+    const ev = evidence(t, s);
+    if(!ev.routes.length) return s.slots.map((_,i)=>oneSlot(i, null)).join('');
+    return ev.routes.map((r,ri)=>`
+      ${ri?'<div class="route-or">or</div>':''}
+      <div class="route${r.done?' got':''}">
+        <div class="route-head"><b>${esc(r.label)}</b>
+          <span class="route-count">${r.got}/${r.total}${r.done?' &#10003;':''}</span></div>
+        ${r.idx.map((i,k)=>oneSlot(i, r.parts[k])).join('')}
+      </div>`).join('');
+  };
 
   $('#drBody').innerHTML=`
     ${fn?`<div class="note" style="margin-bottom:16px;border-left:2px solid var(--gold);padding-left:10px">${esc(fn)}</div>`:''}
@@ -1166,9 +1278,8 @@ function openTile(id){
     <div class="field">
       <div class="flabel">Evidence
         ${canEdit?'— a link per screenshot':''}
-        (<span id="fillN">${linkCount(s)}</span> / ${t.ss})</div>
-      ${t.alts.length?`<div class="note" style="margin-bottom:9px;border-left:2px solid var(--line2);padding-left:9px">
-        Either ${t.alts.map(a=>`<b>${esc(a.label)}</b> (${a.parts.map(esc).join(', ')})`).join(' &nbsp;or&nbsp; ')}</div>`:''}
+        (<span id="fillN">${evidence(t,s).count}</span> / ${evidence(t,s).need})</div>
+      ${t.alts.length?`<div class="note" style="margin-bottom:9px">Fill in <b>either</b> route - finishing one completes the tile.</div>`:''}
       ${canEdit&&t.pool.length?`<div class="note" style="margin-bottom:9px">${esc(t.poolNote
         || (t.poolMax>1?`Each option may be used up to ${t.poolMax} times`:'Pick distinct options'))}</div>`:''}
       ${canEdit?`<div class="slots" id="slots">${slotRows()}</div>`:evidenceRead()}
@@ -1431,9 +1542,9 @@ function multi(){
 
   let doneTiles = 0, missing = 0;
   for(const t of tiles){
-    const s = prog(t.id);
+    const s = prog(t.id), ev = evidence(t, s);
     if(s.status === 'verified') doneTiles++;
-    missing += Math.max(0, t.ss - linkCount(s));
+    missing += Math.max(0, ev.need - ev.count);
   }
   $('#mtSummary').innerHTML = `${tiles.length} tiles need more than one screenshot &middot; `
     + `<b>${doneTiles}</b> verified &middot; <b>${missing}</b> piece${missing===1?'':'s'} of evidence still to log`;
@@ -1442,24 +1553,31 @@ function multi(){
   $('#mtGrid').innerHTML = shown
     .slice().sort((a,b)=>order(a)-order(b))
     .map(t=>{
-      const s = prog(t.id), got = linkCount(s), done = s.status === 'verified';
+      const s = prog(t.id), ev = evidence(t, s), done = s.status === 'verified';
       const state = done ? 'done' : s.assigned.length ? 'active' : 'none';
-      const rows = s.slots.map((sl,i)=>{
+      const got = ev.count;
+      const row = (i, label) => {
+        const sl = s.slots[i] || SLOT();
         const has = !!(sl.link && sl.link.trim());
-        const label = partLabel(t, sl, i);
+        const text = label!=null ? label : partLabel(t, sl, i);
         return `<div class="mt-row ${has?'got':'want'}">
           <span class="mt-tick">${has?'&#10003;':'&#9675;'}</span>
-          <span>${label===null?'<em class="note">not picked yet</em>':esc(label)}</span></div>`;
-      }).join('');
-      const alts = t.alts.length
-        ? `<div class="mt-alt">Either ${t.alts.map(a=>`<b>${esc(a.label)}</b>`).join(' or ')} &mdash;
-             ${t.alts.map(a=>a.parts.map(esc).join(' + ')).join(' &nbsp;/&nbsp; ')}</div>` : '';
+          <span>${text===null?'<em class="note">not picked yet</em>':esc(text)}</span></div>`;
+      };
+      const rows = ev.routes.length
+        ? ev.routes.map((r,ri)=>`${ri?'<div class="mt-or">or</div>':''}
+            <div class="mt-route${r.done?' got':''}">
+              <div class="mt-rhead">${esc(r.label)} <span>${r.got}/${r.total}${r.done?' &#10003;':''}</span></div>
+              ${r.idx.map((i,k)=>row(i, r.parts[k])).join('')}
+            </div>`).join('')
+        : s.slots.map((_,i)=>row(i, null)).join('');
+      const alts = '';
       const who = done ? toArray(s.by) : toArray(s.assigned);
       return `<button class="mt ${state}" data-open="${t.id}" type="button">
         <div class="mt-head">
           <span class="tid mono">${t.id}</span>
           <span class="mt-name">${esc(clean(t.task))}</span>
-          <span class="mt-count">${got}/${t.ss}</span>
+          <span class="mt-count">${got}/${ev.need}</span>
         </div>
         <div class="note">${done?'Verified':state==='active'?esc(who.join(', ')):'Nobody assigned'}</div>
         ${alts}
