@@ -442,7 +442,7 @@ const RATE = {1:['Like','g'],2:['Neutral',''],3:['Please no','a'],4:["Can't do",
    Leave it blank and Refresh asks for it once and remembers it in this browser
    - fine for testing, useless in production where every visitor would have to
    type it. Hard-code it before deploying.                                   */
-const DB_URL = '';
+const DB_URL = 'https://vengienz-bingo-team-5-default-rtdb.firebaseio.com';
 
 /* The network is touched in exactly two places, both behind a button:
    Refresh -> GET the whole document, Publish -> PATCH only the tiles you
