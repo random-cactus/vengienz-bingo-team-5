@@ -21,6 +21,8 @@
   --bad:#FF9AA5;  --bad-bd:#8A3340;  --bad-bg:rgba(255,154,165,.09);
 
   --on-gold:#241A05;
+  --syn1:#6FD7E8; --syn2:#C9A6FF; --syn3:#F2A93F;
+  --syn4:#FF9DB2; --syn5:#7FE0A0; --syn6:#9EC5FF;
   --glow:rgba(255,196,79,.07); --glow2:rgba(201,166,255,.06);
   --r:3px;
 }
@@ -36,6 +38,8 @@
   --bad:#80072B;  --bad-bd:#B0455A;  --bad-bg:rgba(128,7,43,.08);
 
   --on-gold:#FBF5E7;
+  --syn1:#08383F; --syn2:#3E2367; --syn3:#4B2A00;
+  --syn4:#670826; --syn5:#0B391D; --syn6:#0F3066;
   --glow:rgba(120,80,0,.05); --glow2:rgba(62,28,121,.04);
 }
 *{box-sizing:border-box}
@@ -148,6 +152,32 @@ a{color:var(--gold)}
 .flag.f-none{color:var(--bad);border-color:var(--bad-bd)}
 .flags{display:flex;gap:4px;flex-wrap:wrap}
 .flag.sess{color:var(--gold);border-color:rgba(255,196,79,.45)}
+/* Synergy sets. The colour is the quick read; the glyph and the number are what
+   survive colour blindness, so all three always travel together. */
+.flag.syn{color:var(--syn-c);border-color:currentColor;padding:2px 5px;
+  letter-spacing:0;font-size:12.5px;line-height:1}
+.chip.syn{color:var(--syn-c);border-color:currentColor}
+/* Set members stay lit; everything else steps back, so the pairing is obvious even
+   when the partners are three rows down and off the screen. Transient and
+   self-cancelling, which is why dimming is allowed here and nowhere else. */
+#v-board .tile{transition:opacity .12s ease}
+#v-board.syn-focus .tile:not(.syn-hi){opacity:.42}
+/* One custom property per set. Everything that needs the colour reads --syn-c
+   rather than currentColor: `color` on a tile is fair game for .tile.st-* rules,
+   and a ring drawn in currentColor quietly became whatever won that cascade. */
+.syn1{--syn-c:var(--syn1)} .syn2{--syn-c:var(--syn2)} .syn3{--syn-c:var(--syn3)}
+.syn4{--syn-c:var(--syn4)} .syn5{--syn-c:var(--syn5)} .syn6{--syn-c:var(--syn6)}
+/* outline, not box-shadow: .tile.ondiag owns box-shadow and would win, so the
+   ring vanished on exactly the diagonal tiles. */
+.tile.syn-hi{outline:2px solid var(--syn-c);outline-offset:-2px}
+.syn-list{display:flex;gap:6px;flex-wrap:wrap}
+.syn-link{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:6px;
+  border:1px solid var(--line);background:var(--raise2);color:var(--text);
+  font-size:12.5px;cursor:pointer;text-align:left}
+.syn-link{color:var(--text)}
+.syn-link:hover,.syn-link:focus-visible{border-color:var(--syn-c);outline:none}
+.syn-link .sid{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted)}
+.syn-link .tick{color:var(--ok);font-weight:700}
 
 /* ---------- sign-up sessions ---------- */
 .sess{display:flex;flex-direction:column;gap:8px;margin-bottom:11px}
@@ -572,6 +602,25 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
    show, and saying so is better than a board full of stale numbers. */
 const EMPTY = {event:{name:'Vengienz Summer Bingo 2026', start:'', end:''},
                boards:[], players:[], tasks:[], ratingKey:{}, footnotes:{}, progress:{}};
+/* Tiles that feed each other - same boss, same drop table, same grind. Kept here
+   rather than in the document on purpose: it is a fact about Old School, not about
+   this event, so it needs no re-import to take effect and never goes stale in a
+   database someone forgot to update. Renaming a set is a one-word edit below. */
+const SYNERGY = [
+  {label:'Set 1', glyph:'\u25C6', ids:['A01','A11','A20','A27']},
+  {label:'Set 2', glyph:'\u25B2', ids:['A03','A26']},
+  {label:'Set 3', glyph:'\u25CF', ids:['A04','A06','A21','A23','A28']},
+  {label:'Set 4', glyph:'\u25A0', ids:['A18','A34']},
+  {label:'Set 5', glyph:'\u2605', ids:['A02','A35']},
+  {label:'Set 6', glyph:'\u2731', ids:['A17','A32']}
+];
+const SYN = {};
+SYNERGY.forEach((g,i)=>g.ids.forEach(id=>{ SYN[id]=i+1; }));
+const synOf = id => SYN[id] || 0;
+/* The other tiles in this tile's set, in board order. */
+const synMates = id => !SYN[id] ? []
+  : SYNERGY[SYN[id]-1].ids.filter(x=>x!==id).map(byId).filter(Boolean);
+
 /* label, chip class, glyph. The glyph is what survives colour blindness. */
 const RATE = {1:['Like','g','\u2713'], 2:['Neutral','','\u00b7'], 3:['Please no','a','~'],
               4:["Can't do",'r','\u2717'], 5:['In progress','p','\u2026']};
@@ -1170,6 +1219,7 @@ function diffPanel(){
 
 /* ---------- board ---------- */
 function boards(){
+  synLit = 0;          // tiles are about to be replaced; forget what was lit
   const host=$('#boards'); host.innerHTML='';
   for(const b of DATA.boards){
     const ts=boardTasks(b.key), sum=ts.reduce((a,t)=>a+t.points,0);
@@ -1191,6 +1241,8 @@ function boards(){
         const state = done ? 'done' : s.assigned.length ? 'active' : 'none';
         const btn=el('button','tile st-'+state+(done?' done':'')+(pend?' pending':'')+(onDiag(t.id)?' ondiag':''));
         btn.type='button';
+        const sy=synOf(t.id);
+        if(sy){ btn.dataset.syn=sy; btn.classList.add('syn'+sy); }
         const ev=evidence(t,s), pc=ev.need?Math.min(1,ev.count/ev.need):0;
         const nL=likers(t).length, nB=blocked(t), risky=nL<=2||nB>=8;
         btn.innerHTML=`
@@ -1201,7 +1253,9 @@ function boards(){
               state==='done'  ? '<span class="flag f-done">&#10003; Done</span>' : '',
               state==='none'  ? '<span class="flag f-none">Unassigned</span>' : '',
               !done && pend   ? '<span class="flag">&#9670; Pending</span>' : '',
-              hasSession(s)   ? '<span class="flag sess">&#9683; Session</span>' : ''
+              hasSession(s)   ? '<span class="flag sess">&#9683; Session</span>' : '',
+              sy ? `<span class="flag syn syn${sy}" title="${esc(synTip(t.id))}"
+                     aria-label="${esc(SYNERGY[sy-1].label)}">${SYNERGY[sy-1].glyph}</span>` : ''
             ].filter(Boolean);
             return f.length?`<div class="flags">${f.join('')}</div>`:'';})()}
           ${(()=>{
@@ -1303,7 +1357,22 @@ function openTile(id){
     <span class="chip gold">${t.points} pts</span>
     <span class="chip">${t.ss} screenshot${t.ss>1?'s':''}</span>
     <span class="chip ${L.length?'g':'r'}">${L.length} volunteer${L.length===1?'':'s'}</span>
-    ${blocked(t)?`<span class="chip r">${blocked(t)} blocked</span>`:''}`;
+    ${blocked(t)?`<span class="chip r">${blocked(t)} blocked</span>`:''}
+    ${synOf(id)?`<span class="chip syn syn${synOf(id)}">${
+      SYNERGY[synOf(id)-1].glyph} ${esc(SYNERGY[synOf(id)-1].label)}</span>`:''}`;
+
+
+  const mates = synMates(id);
+  const synBlock = !mates.length ? '' :
+    `<div class="field"><div class="flabel">Works with</div>
+      <div class="note" style="margin-bottom:7px">Same source - doing one of these can
+        drop the others, so they are worth running together.</div>
+      <div class="syn-list">${mates.map(x=>{
+        const ms=prog(x.id), md=ms.status==='verified';
+        return `<button class="syn-link syn${synOf(id)}" data-goto="${x.id}">
+          <span class="sid">${x.id}</span>${esc(clean(x.task))}
+          ${md?'<span class="tick">&#10003;</span>':''}</button>`;}).join('')}</div>
+    </div>`;
 
   const dis = canEdit?'':' disabled';
   const audit = [
@@ -1369,6 +1438,7 @@ function openTile(id){
   };
 
   $('#drBody').innerHTML=`
+    ${synBlock}
     ${fn?`<div class="note" style="margin-bottom:16px;border-left:2px solid var(--gold);padding-left:10px">${esc(fn)}</div>`:''}
     ${canEdit?'':`<div class="note" style="margin-bottom:16px;border-left:2px solid var(--line2);padding-left:10px">
         Verifiers log progress. You can ${ME?'add yourself and ':''}join a session below.</div>`}
@@ -1464,6 +1534,10 @@ function openTile(id){
   const setSlot=(i,f,delay=0)=>{ const next=s.slots.map((x,j)=>j===i?{...x,...f}:x);
                          s.slots=next; patch(id,{slots:next}); autosave(delay); };
   /* redraw without losing the reader's scroll position */
+  $('#drBody').querySelectorAll('[data-goto]').forEach(b=>{
+    b.onclick=()=>openTile(b.dataset.goto);
+  });
+
   const redraw=()=>{ const y=$('#drBody').scrollTop; openTile(id); $('#drBody').scrollTop=y; };
 
   const pick=e=>{
@@ -1839,6 +1913,41 @@ function roster(){
           <button class="btn" id="prefRevert">Revert</button></span>` : '');
 }
 
+/* ---------- synergy ---------- */
+const synTip = id => {
+  const m = synMates(id);
+  return !m.length ? '' :
+    `Works with ${m.map(x=>clean(x.task)).join(', ')} - same source, so one trip can
+     feed both`.replace(/\s+/g,' ');
+};
+/* Hovering one tile lights its set and steps the rest of the board back.
+   Set members are rarely neighbours - set 1 spans four rows - so on a normal
+   screen most partners are off the bottom. Lighting them alone looked broken:
+   you hover, and nothing visible changes. Dimming the others means the hover
+   always does something you can see, wherever you are on the board.
+
+   Driven by mouseover only. The old pair of mouseover/mouseout handlers had to
+   agree on ordering for every parent/child transition; this just recomputes from
+   whatever is under the pointer, so it cannot get stuck half-applied. */
+let synLit = 0;
+function litSyn(n){
+  if(n === synLit) return;
+  synLit = n;
+  const wrap = $('#v-board'); if(!wrap) return;
+  wrap.querySelectorAll('.tile.syn-hi').forEach(x=>x.classList.remove('syn-hi'));
+  wrap.classList.toggle('syn-focus', !!n);
+  if(n) wrap.querySelectorAll('.tile[data-syn="'+n+'"]').forEach(x=>x.classList.add('syn-hi'));
+}
+function wireSyn(){
+  document.addEventListener('mouseover', e=>{
+    const el = e.target && e.target.closest ? e.target.closest('.tile[data-syn]') : null;
+    litSyn(el ? +el.dataset.syn : 0);
+  });
+  /* the pointer can leave for the browser chrome without any mouseover following */
+  document.addEventListener('mouseleave', ()=>litSyn(0));
+  addEventListener('blur', ()=>litSyn(0));
+}
+
 /* ---------- rating editor ---------- */
 let rateCell=null;
 function openRate(td){
@@ -1990,7 +2099,7 @@ $('#banner').onclick=e=>{
   /* a cached figure for a different window would be quietly wrong */
   if(EHB.window && EHB.window !== eventWindow().join('|')) EHB = {rows:{}, at:0, window:''};
 
-  show('board'); renderAll(); wireRate();
+  show('board'); renderAll(); wireRate(); wireSyn();
 
   /* Read on load, then keep the board within AUTO_REFRESH of the database. Quiet,
      because nobody asked for this one - a failure still raises the banner. */
