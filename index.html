@@ -1078,8 +1078,7 @@ function strip(){
   const cells=[
     ['Points earned',`${x.pts}<small> / ${x.maxPts}</small>`, x.pts/x.maxPts, ''],
     ['Tiles verified',`${x.done}<small> / ${x.total}</small>`, x.done/x.total, 'p'],
-    ['Lines doubled',`${x.rowsLit}<small> / ${x.rowsTotal}</small>`, x.rowsLit/x.rowsTotal, ''],
-    ['Screenshots logged',`${x.ss}<small> / ${x.maxSs}</small>`, x.ss/x.maxSs, 'j']
+    ['Lines doubled',`${x.rowsLit}<small> / ${x.rowsTotal}</small>`, x.rowsLit/x.rowsTotal, '']
   ].map(([k,v,p,c])=>`<div class="stat"><div class="stat-k">${k}</div><div class="stat-v">${v}</div>
       <div class="bar ${c}"><i style="width:${(Math.min(1,p||0)*100).toFixed(1)}%"></i></div></div>`);
   $('#strip').innerHTML = mvpCell() + cells.join('');
