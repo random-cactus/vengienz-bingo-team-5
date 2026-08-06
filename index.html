@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Team 5 · Vengienz Summer Bingo 2026</title>
+<title>Turbo Tzhar-tism · Vengienz Summer Bingo 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -429,7 +429,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 <header class="top">
   <div class="top-in">
     <div>
-      <div class="eyebrow">Vengienz · Team 5</div>
+      <div class="eyebrow">Vengienz · Turbo Tzhar-tism</div>
       <h1 class="title">Summer Bingo 2026</h1>
       <div class="lede" id="window">-</div>
     </div>
@@ -1028,7 +1028,7 @@ function header(){
   }
   const s=new Date(DATA.event.start+'Z'), e=new Date(DATA.event.end+'Z');
   const f=d=>d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-  $('#window').textContent = `${f(s)} → ${f(e)} · your local time · ${DATA.tasks.length} tiles across ${DATA.boards.length} boards`;
+  $('#window').textContent = `${f(s)} → ${f(e)} · your local time`;
   clearInterval(clockTimer);
   tick(); clockTimer=setInterval(tick,1000);
   function tick(){
