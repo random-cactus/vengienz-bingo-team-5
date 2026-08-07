@@ -196,6 +196,13 @@ a{color:var(--gold)}
 .act-tname{font-weight:600;display:block;margin-bottom:2px}
 .act-what{color:var(--muted);font-size:12.5px}
 .act-prog{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--text);margin-top:3px;display:block}
+/* Which of this activity's pool options are still worth doing. A spent one keeps
+   full contrast and takes a line through it - dimming it would fight the floor. */
+.act-opts{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:5px}
+.act-opts .opt{font-size:12px;color:var(--text);border:1px solid var(--line);
+  border-radius:4px;padding:1px 6px;background:var(--panel)}
+.act-opts .opt.spent{text-decoration:line-through;text-decoration-thickness:1.5px;
+  color:var(--muted);border-style:dashed}
 .act-done-note{margin-top:14px;font-size:12.5px;color:var(--muted)}
 /* The one tile left in a line is worth far more than its face value, so it gets
    a fill rather than a tint - it should read as "do this one next". */
@@ -515,9 +522,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" data-view="board">Board</button>
-    <button class="tab" role="tab" aria-selected="false" data-view="draft">Draft</button>
-    <button class="tab" role="tab" aria-selected="false" data-view="multi">Multi-tile</button>
     <button class="tab" role="tab" aria-selected="false" data-view="acts">Activities</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="multi">Multi-tile</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="draft">Draft</button>
     <button class="tab" role="tab" aria-selected="false" data-view="roster">Roster</button>
   </div>
 
@@ -640,7 +647,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
     <button class="dr-close" id="drClose" aria-label="Close">×</button>
     <div class="mono" style="font-size:11.5px;letter-spacing:.12em;color:var(--muted)" id="drId"></div>
     <h2 class="px" style="font-size:19px;margin-top:6px;line-height:1.2" id="drName"></h2>
-    <div class="chips" style="margin-top:9px" id="drChips"></div>
   </div>
   <div class="dr-body" id="drBody"></div>
 </aside>
@@ -717,7 +723,7 @@ const ACTIVITIES = [
   ]},
   {n:"General Graardor (Bandos GWD)", g:[
     ["A18","Bandos hilt, godsword shards"],
-    ["A34","Bandos chestplate / tassets / boots for the repair",["Bandos Piece"]],
+    ["A34","Bandos chestplate or tassets for the repair",["Bandos Piece"]],
   ]},
   {n:"God Wars Dungeon (Kree'arra, Zilyana, K'ril)", g:[["A18","Hilts and godsword shards"]]},
   {n:"Kalphite Queen", g:[["A03","Dragon pickaxe (1/400)"], ["A17","Jar of sand"]]},
@@ -1584,17 +1590,6 @@ function openTile(id){
   $('#drId').textContent=`${id} · ${bn} · row ${t.row}, col ${t.col}`;
   $('#drName').textContent=clean(t.task);
   const fn=DATA.footnotes[stars(t.task)];
-  const L=likers(t);
-  $('#drChips').innerHTML=`<span class="status ${STAT[s.status][1]}">${STAT[s.status][0]}</span>
-    <span class="chip gold">${t.points} pts</span>
-    <span class="chip">${t.ss} screenshot${t.ss>1?'s':''}</span>
-    <span class="chip ${L.length?'g':'r'}">${L.length} volunteer${L.length===1?'':'s'}</span>
-    ${blocked(t)?`<span class="chip r">${blocked(t)} blocked</span>`:''}
-    ${(()=>{ const b=lineBonus(id); return b.bonus
-      ? `<span class="chip gold" title="${esc(bonusTip(b))}">+${b.bonus} line bonus</span>` : ''; })()}
-    ${synOf(id)?`<span class="chip syn syn${synOf(id)}">${
-      SYNERGY[synOf(id)-1].glyph} ${esc(SYNERGY[synOf(id)-1].label)}</span>`:''}`;
-
 
   const mates = synMates(id);
   const synBlock = !mates.length ? '' :
@@ -2308,16 +2303,44 @@ function actProgress(t, s, parts){
   if(pool){
     const low = pool.opts.map(o=>o.toLowerCase());
     const got = s.slots.filter((sl,i)=>has(i) && low.includes(String(sl.opt||'').toLowerCase()));
-    return [{label:'', got:Math.min(got.length, pool.cap), need:pool.cap}];
+    /* Spell the reuse rule out. "0/2" alone doesn't say whether that's two
+       different runs or the same boss twice, and the two pools differ. */
+    const per = Math.max(1, t.poolMax||1);
+    const times = per===1 ? 'once' : per===2 ? 'twice' : per+' times';
+    /* Per option, how many times it's actually been banked - an option at its cap
+       is spent and can't be picked again, which is worth showing rather than
+       leaving someone to work it out from a total. Counted by logged evidence,
+       not by a slot merely naming it: a reservation with no screenshot is still
+       a run somebody has to do. */
+    const used = {};
+    for(const sl of got) { const k = String(sl.opt).toLowerCase(); used[k] = (used[k]||0)+1; }
+    return [{label:'', got:Math.min(got.length, pool.cap), need:pool.cap,
+             note: pool.opts.length===1 ? `counts ${times}`
+                   : `${pool.opts.length} options, each counts ${times}`,
+             opts: pool.opts.map(o=>({name:o, used:used[o.toLowerCase()]||0, cap:per,
+                                      spent:(used[o.toLowerCase()]||0) >= per}))}];
   }
-  const idx = actSlots(t, parts);
-  if(!idx){ const ev = evidence(t, s); return [{label:'', got:ev.count, need:ev.need}]; }
-  if(!t.alts.length) return [{label:'', got:idx.filter(has).length, need:idx.length}];
-  const names = t.alts.flatMap(a=>a.parts);
+  /* Named parts get listed too, so B12 shows Bottled Storm / Dragon Hook / Dragon
+     Cannon with the ones already logged struck through. Only where the names are
+     distinct - three identical "Halberd piece" chips say less than "0/3" does. */
+  const names = t.alts.length ? t.alts.flatMap(a=>a.parts) : (t.subs||[]);
+  const chips = idxs => {
+    const ns = idxs.map(i=>names[i]);
+    if(ns.some(n=>!n)) return null;
+    if(new Set(ns.map(n=>String(n).toLowerCase())).size !== ns.length) return null;
+    return idxs.map(i=>({name:names[i], used:has(i)?1:0, cap:1, spent:has(i)}));
+  };
+  /* No tag means the activity supplies the lot. */
+  const idx = actSlots(t, parts) || s.slots.map((_,i)=>i);
+
+  if(!t.alts.length)
+    return [{label:'', got:idx.filter(has).length, need:idx.length, opts:chips(idx)}];
+
   const out = [];
   for(const r of evidence(t, s).routes){
     const mine = idx.filter(i => r.idx.includes(i));
-    if(mine.length) out.push({label:names[mine[0]], got:mine.filter(has).length, need:mine.length});
+    if(mine.length) out.push({label:names[mine[0]], got:mine.filter(has).length,
+                              need:mine.length, opts:chips(mine)});
   }
   return out.length ? out : [{label:'', got:0, need:idx.length}];
 }
@@ -2388,15 +2411,24 @@ function activities(){
     <div class="act-get">${sel.live.map(([id,what,parts])=>{
       const t=byId(id), s=prog(id);
       const state = s.assigned.length ? 'active' : 'none';
-      const got = actProgress(t, s, parts)
-        .map(g=>`${g.label?esc(g.label)+' ':''}${g.got}/${g.need}`).join(' or ');
+      const gs = actProgress(t, s, parts);
+      const got = gs.map(g=>`${g.label?esc(g.label)+' ':''}${g.got}/${g.need}`).join(' or ');
+      const rule = gs[0] && gs[0].note ? ` · ${esc(gs[0].note)}` : '';
+      /* One item is already named by the line above it; the chips earn their space
+         from two upwards, where "which ones are left" stops being obvious. */
+      const chosen = gs.flatMap(g=>g.opts||[]);
+      const opts = chosen.length > 1 ? `<span class="act-opts">${chosen.map(o=>
+        `<span class="opt${o.spent?' spent':''}" title="${
+          o.spent ? esc(o.name)+' - done'+(o.cap>1?' '+o.used+' of '+o.cap+' times':'')
+                  : esc(o.name)+' - still needed'}">${esc(o.name)}</span>`
+        ).join('')}</span>` : '';
       const b = lineBonus(id);
       return `<button class="act-item st-${state}" data-goto="${id}">
         <span class="act-id">${id}<br>${t.points}p</span>
         <span><span class="act-tname">${esc(clean(t.task))}${b.bonus
           ? `<span class="bonus" title="${esc(bonusTip(b))}">+${b.bonus} BONUS!</span>` : ''}</span>
-          <span class="act-what">${esc(what)}</span>
-          <span class="act-prog">${got} from here${
+          <span class="act-what">${esc(what)}</span>${opts}
+          <span class="act-prog">${got} from here${rule}${
             s.assigned.length?' · '+esc(s.assigned.join(', ')):' · nobody assigned'}</span>
         </span></button>`;}).join('')}</div>
     ${spent.length?`<div class="act-done-note">Nothing more from here:
@@ -2410,7 +2442,7 @@ function activities(){
 function show(v){
   view=v;
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v));
-  ['board','draft','multi','acts','roster'].forEach(k=>$('#v-'+k).hidden = k!==v);
+  ['board','acts','multi','draft','roster'].forEach(k=>$('#v-'+k).hidden = k!==v);
   if(v==='draft')draft(); if(v==='roster')roster(); if(v==='multi')multi();
   if(v==='acts')activities();
 }
