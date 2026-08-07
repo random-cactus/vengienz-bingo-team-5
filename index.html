@@ -170,6 +170,36 @@ a{color:var(--gold)}
 /* outline, not box-shadow: .tile.ondiag owns box-shadow and would win, so the
    ring vanished on exactly the diagonal tiles. */
 .tile.syn-hi{outline:2px solid var(--syn-c);outline-offset:-2px}
+.act-wrap{display:grid;grid-template-columns:minmax(240px,320px) 1fr;gap:16px;align-items:start}
+@media (max-width:900px){.act-wrap{grid-template-columns:1fr}}
+.act-list{display:flex;flex-direction:column;gap:5px;max-height:70vh;overflow-y:auto;padding-right:4px}
+.act-row{display:flex;align-items:baseline;gap:9px;width:100%;padding:9px 11px;border-radius:8px;
+  border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;text-align:left;
+  font-family:"Barlow",sans-serif;font-size:13.5px}
+.act-row:hover{border-color:var(--line2);background:var(--raise)}
+.act-row[aria-selected="true"]{border-color:var(--gold);background:var(--raise2);font-weight:600}
+.act-row .an{flex:1;min-width:0}
+.act-row .ac{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.act-row[aria-selected="true"] .ac{color:var(--gold)}
+.act-detail{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px 18px}
+.act-h{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;margin:0 0 3px}
+.act-sub{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+.act-get{display:flex;flex-direction:column;gap:8px}
+.act-item{display:grid;grid-template-columns:54px 1fr;gap:11px;align-items:start;width:100%;
+  padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--raise);
+  color:var(--text);cursor:pointer;text-align:left;font-family:"Barlow",sans-serif;font-size:13.5px}
+.act-item:hover{border-color:var(--line2)}
+.act-item.st-done{background:var(--ok-bg);border-color:var(--ok-bd)}
+.act-item.st-active{background:var(--warn-bg);border-color:var(--warn-bd)}
+.act-item.st-none{background:var(--bad-bg);border-color:var(--bad-bd);border-style:dashed}
+.act-id{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--muted)}
+.act-tname{font-weight:600;display:block;margin-bottom:2px}
+.act-what{color:var(--muted);font-size:12.5px}
+.act-prog{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);margin-top:3px;display:block}
+.act-done-note{margin-top:14px;font-size:12.5px;color:var(--muted)}
+#actFind{background:var(--raise);border:1px solid var(--line);border-radius:8px;color:var(--text);
+  padding:7px 11px;font-family:"Barlow",sans-serif;font-size:13.5px;min-width:190px}
+#actFind:focus{outline:2px solid var(--gold);outline-offset:1px}
 .syn-list{display:flex;gap:6px;flex-wrap:wrap}
 .syn-link{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:6px;
   border:1px solid var(--line);background:var(--raise2);color:var(--text);
@@ -481,6 +511,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
     <button class="tab" role="tab" aria-selected="true" data-view="board">Board</button>
     <button class="tab" role="tab" aria-selected="false" data-view="draft">Draft</button>
     <button class="tab" role="tab" aria-selected="false" data-view="multi">Multi-tile</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="acts">Activities</button>
     <button class="tab" role="tab" aria-selected="false" data-view="roster">Roster</button>
   </div>
 
@@ -546,6 +577,18 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
     <div class="mt-grid" id="mtGrid"></div>
   </section>
 
+  <!-- ACTIVITIES -->
+  <section class="view" id="v-acts" hidden>
+    <div class="toolbar">
+      <input type="search" id="actFind" placeholder="Find an activity" autocomplete="off">
+      <span class="note" id="actSummary"></span>
+    </div>
+    <div class="act-wrap">
+      <div class="act-list" id="actList" role="tablist" aria-label="Activities"></div>
+      <div class="act-detail" id="actDetail"></div>
+    </div>
+  </section>
+
   <!-- ROSTER -->
   <section class="view" id="v-roster" hidden>
     <div class="two" style="margin-bottom:18px">
@@ -602,6 +645,168 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
    show, and saying so is better than a board full of stale numbers. */
 const EMPTY = {event:{name:'Vengienz Summer Bingo 2026', start:'', end:''},
                boards:[], players:[], tasks:[], ratingKey:{}, footnotes:{}, progress:{}};
+/* Where each tile can actually be farmed - compiled from the OSRS Wiki, see
+   activities.md. Like SYNERGY this is game knowledge rather than event data,
+   so it lives here and needs no re-import. qa.py checks every id resolves. */
+const ACTIVITIES = [
+  {n:"Abyssal Sire", g:[["A17","Jar of miasma"], ["A19","Abyssal whip"], ["B13","Abyssal whip"]]},
+  {n:"Abyssal demons", g:[["A19","Abyssal whip"], ["B13","Abyssal whip"]]},
+  {n:"Alchemical Hydra", g:[
+    ["A02","Dragon hunter lance"],
+    ["A17","Jar of chemicals"],
+    ["A25","Alchemical Hydra"],
+    ["A35","Hydra's eye, fang, heart"],
+  ]},
+  {n:"Araxxor", g:[
+    ["A17","Jar of venom"],
+    ["A23","Etched Araxyte Fang (Rancor) or Noxious point/blade/pommel"],
+    ["A25","Araxxor"],
+    ["B16","Aranea boots (Araxytes)"],
+  ]},
+  {n:"Barbarian Assault", g:[["B09","20 Penance Queen kills"]]},
+  {n:"Barrows", g:[["A22","All six brothers' helms, bodies, legs and weapons"]]},
+  {n:"Brutus (Lumbridge cow field)", g:[["B02","Beef pet"]]},
+  {n:"Callisto / Artio", g:[["A03","Dragon pickaxe"], ["A26","Voidwaker gem"]]},
+  {n:"Cerberus", g:[["A17","Jar of souls"], ["A24","Primordial / Pegasian / Eternal crystal"]]},
+  {n:"Chambers of Xeric", g:[
+    ["A01","Ancestral hat / robe top / robe bottom"],
+    ["A02","Dragon hunter crossbow"],
+    ["A11","Twisted bow, Kodai insignia, Elder maul, Dragon claws, Dinh's bulwark"],
+    ["A16","Chambers Trio, Chambers 5-Man, CM Trio, CM 5-Man"],
+    ["A20","Twisted buckler"],
+    ["A27","Dexterous / Arcane prayer scroll; CM: Metamorphic dust, Twisted ancestral kit"],
+    ["A28","Onyx (Tekton)"],
+  ]},
+  {n:"Chaos Elemental", g:[
+    ["A03","Dragon pickaxe (1/256)"],
+  ]},
+  {n:"Corporeal Beast", g:[
+    ["A17","Jar of spirits"],
+    ["A29","Spectral / Arcane / Elysian sigil, Holy elixir, Spirit shield"],
+  ]},
+  {n:"Dagannoth Kings", g:[["A15","Berserker, Warrior, Seers, Archers rings"]]},
+  {n:"Dark beasts", g:[["B16","Dark bow"]]},
+  {n:"Demonic gorillas", g:[
+    ["A04","Zenyte shard"],
+    ["A06","Zenyte shard"],
+    ["A21","Zenyte shard"],
+    ["A23","Zenyte shard"],
+  ]},
+  {n:"Doom of Mokhaiotl", g:[["A21","Mokhaiotl cloth + 10,000 demon tears"], ["A25","Doom Racer"]]},
+  {n:"Fortis Colosseum", g:[
+    ["A04","Onyx (for Rupture) — wave 12"],
+    ["A08","Colosseum GM speed runs (4 needed for this route)"],
+    ["A13","Sunfire fanatic set, Tonalztics of ralos, Echo crystal, Dizana's quiver"],
+    ["A21","Onyx (for Confliction) — wave 12"],
+    ["A23","Onyx (for Rancor) — wave 12"],
+    ["A25","Colo counts as a solo GM boss"],
+    ["A28","Uncut onyx / onyx — wave 12"],
+  ]},
+  {n:"General Graardor (Bandos GWD)", g:[
+    ["A18","Bandos hilt, godsword shards"],
+    ["A34","Bandos chestplate / tassets / boots for the repair"],
+  ]},
+  {n:"God Wars Dungeon (Kree'arra, Zilyana, K'ril)", g:[["A18","Hilts and godsword shards"]]},
+  {n:"Kalphite Queen", g:[["A03","Dragon pickaxe (1/400)"], ["A17","Jar of sand"]]},
+  {n:"King Black Dragon", g:[["A03","Dragon pickaxe (1/1,000)"]]},
+  {n:"Kraken", g:[["A17","Jar of dirt"], ["A19","Kraken tentacle"]]},
+  {n:"Lizardman shamans", g:[["A12","Dragon warhammer"]]},
+  {n:"Mad Angel", g:[["A17","2nd Jar of light also satisfies 'any boss jar'"], ["A32","Jar of light"]]},
+  {n:"Maggot King", g:[["A04","Elder venator fang — the Rupture upgrade"]]},
+  {n:"Mining (any method)", g:[["B01","2m Mining XP"]]},
+  {n:"Moons of Peril (Neypotzli)", g:[
+    ["A04","Onyx (for Rupture) — moon key chest"],
+    ["A07","Blood / Blue / Eclipse moon sets and weapons"],
+    ["A21","Onyx (for Confliction) — moon key chest"],
+    ["A23","Onyx (for Rancor) — moon key chest"],
+    ["A28","Uncut onyx / onyx — moon key chest"],
+  ]},
+  {n:"Nex", g:[["A18","Ancient Hilt"], ["A34","Damaged Torva"]]},
+  {n:"Phantom Muspah", g:[["A05","Venator shard ×5"], ["A25","Phantom Muspah"]]},
+  {n:"Sailing", g:[
+    ["B10","2m Sailing XP"],
+    ["B11","Dragon metal sheet ×16"],
+    ["B12","Bottled storm, Broken dragon hook, Dragon cannon barrel"],
+  ]},
+  {n:"Skotizo", g:[
+    ["A04","Onyx (for Rupture)"],
+    ["A17","Jar of darkness"],
+    ["A21","Onyx (for Confliction)"],
+    ["A23","Onyx (for Rancor)"],
+    ["A28","Uncut onyx / onyx"],
+  ]},
+  {n:"Tempoross", g:[
+    ["A03","Dragon harpoon from the reward pool (1/8,000)"],
+    ["B07","Tome of water"],
+    ["B08","2m Fishing XP"],
+  ]},
+  {n:"The Forgotten Four (Duke, Leviathan, Whisperer, Vardorvis)", g:[
+    ["A25","Duke Sucellus, Vardorvis and Leviathan are each pool entries"],
+    ["A33","Virtus pieces and the four Soulreaper axe components"],
+  ]},
+  {n:"The Gauntlet / Corrupted Gauntlet", g:[
+    ["A25","Gauntlet and Corrupted Gauntlet are separate pool entries"],
+    ["A36","Enhanced crystal weapon seed"],
+  ]},
+  {n:"The Hueycoatl", g:[["A02","Dragon hunter wand (1/105)"], ["A16","Huey"], ["B07","Tome of earth (1/90)"]]},
+  {n:"The Inferno", g:[["A08","Inferno GM speed runs (2 needed for this route)"], ["A25","Inferno"]]},
+  {n:"The Nightmare / Phosani's", g:[
+    ["A09","Inquisitor's, Nightmare staff, Harmonised / Volatile / Eldritch orb"],
+    ["A16","Nightmare (group)"],
+    ["A17","Jar of dreams"],
+    ["A25","Phosani's Nightmare (solo)"],
+  ]},
+  {n:"The Royal Titans", g:[["A14","Fire and Ice element staff crowns"]]},
+  {n:"Theatre of Blood", g:[
+    ["A01","Justiciar faceguard / chestguard / legguards"],
+    ["A11","Scythe of vitur, Ghrazi rapier, Sanguinesti staff"],
+    ["A16","ToB Duo / 3 / 4 / 5-Man, HMT 3 / 4 / 5-Man"],
+    ["A20","Avernic defender hilt"],
+    ["A27","Sanguine dust, Sanguine kit; HMT: Holy ornament kit"],
+  ]},
+  {n:"Thermonuclear smoke devil", g:[["A17","Jar of smoke"], ["B13","Occult necklace"]]},
+  {n:"Tombs of Amascut", g:[
+    ["A01","Masori mask / body / chaps"],
+    ["A11","Tumeken's shadow, Osmumten's fang"],
+    ["A16","Tombs Speed Runner 2"],
+    ["A20","Elidinis' ward"],
+    ["A27","Lightbearer, Thread of Elidinis, the four keris upgrades"],
+  ]},
+  {n:"Tormented demons", g:[["A30","Burning claw, Tormented synapse"]]},
+  {n:"Treasure Trails", g:[
+    ["A03","Dragon pickaxe — master emote step"],
+    ["B03","God trimmed rune (hard), god d'hide (elite)"],
+    ["B04","Dragon ornament kits (master)"],
+    ["B14","God book pages"],
+    ["B15","Dragon or demon mask"],
+  ]},
+  {n:"TzHaar / Fight Caves", g:[
+    ["A25","Fight Caves"],
+    ["B05","Obsidian helmet / platebody / platelegs from TzHaar-Ket"],
+  ]},
+  {n:"Venenatis / Spindel", g:[["A03","Dragon pickaxe"], ["A26","Voidwaker blade"]]},
+  {n:"Vet'ion / Calvar'ion", g:[["A03","Dragon pickaxe"], ["A26","Voidwaker hilt"]]},
+  {n:"Vyrewatch Sentinels", g:[["A10","Blood shard ×4"]]},
+  {n:"Wintertodt", g:[["B07","Tome of fire"]]},
+  {n:"Wyrms / Shadow wyrms", g:[["A03","Dragon harpoon"]]},
+  {n:"Yama", g:[["A16","Yama"], ["A31","Oathplate shards; Yama Contract gives 45"]]},
+  {n:"Zalcano", g:[
+    ["A04","Onyx (for Rupture)"],
+    ["A21","Onyx (for Confliction)"],
+    ["A23","Onyx (for Rancor)"],
+    ["A28","Uncut onyx / onyx"],
+    ["B06","Crystal tool seed, Zalcano shard"],
+  ]},
+  {n:"Zulrah", g:[
+    ["A04","Onyx (for Rupture)"],
+    ["A17","Jar of swamp"],
+    ["A21","Onyx (for Confliction)"],
+    ["A23","Onyx (for Rancor)"],
+    ["A25","Zulrah — usable twice"],
+    ["A28","Uncut onyx / onyx"],
+  ]},
+];
+
 /* Tiles that feed each other - same boss, same drop table, same grind. Kept here
    rather than in the document on purpose: it is a fact about Old School, not about
    this event, so it needs no re-import to take effect and never goes stale in a
@@ -1938,6 +2143,18 @@ function litSyn(n){
   wrap.classList.toggle('syn-focus', !!n);
   if(n) wrap.querySelectorAll('.tile[data-syn="'+n+'"]').forEach(x=>x.classList.add('syn-hi'));
 }
+function wireActs(){
+  $('#actList').addEventListener('click', e=>{
+    const b=e.target.closest('[data-act-name]'); if(!b) return;
+    actSel = b.dataset.actName; activities();
+  });
+  $('#actDetail').addEventListener('click', e=>{
+    const b=e.target.closest('[data-goto]'); if(b) openTile(b.dataset.goto);
+  });
+  const f=$('#actFind');
+  if(f) f.oninput = ()=>{ actFilter = f.value; activities(); };
+}
+
 function wireSyn(){
   document.addEventListener('mouseover', e=>{
     const el = e.target && e.target.closest ? e.target.closest('.tile[data-syn]') : null;
@@ -2014,16 +2231,75 @@ function wireRate(){
   addEventListener('resize', ()=>closeRate(false));
 }
 
+/* ---------- activities ----------
+   Which bosses still have something to give. An activity drops off the list once
+   every tile it feeds is verified - the point of the view is what is left to farm,
+   and a boss with nothing outstanding is noise. */
+let actSel = '', actFilter = '';
+const actLive = a => a.g.filter(([id]) => byId(id) && prog(id).status !== 'verified');
+
+function activities(){
+  const list = ACTIVITIES
+    .map(a => ({a, live: actLive(a)}))
+    .filter(x => x.live.length)
+    .map(x => ({...x, pts: x.live.reduce((n,[id]) => n + (byId(id).points||0), 0)}))
+    .sort((p,q) => q.live.length - p.live.length || q.pts - p.pts || p.a.n.localeCompare(q.a.n));
+
+  const q = actFilter.trim().toLowerCase();
+  const shown = q ? list.filter(x => x.a.n.toLowerCase().includes(q)) : list;
+
+  $('#actSummary').textContent = !list.length
+    ? 'Everything is verified - nothing left to farm.'
+    : `${list.length} activit${list.length===1?'y':'ies'} still worth a trip`
+      + (q && shown.length !== list.length ? ` · ${shown.length} matching` : '');
+
+  /* the selection can vanish under you when its last tile is verified */
+  if(!shown.some(x => x.a.n === actSel)) actSel = shown.length ? shown[0].a.n : '';
+
+  $('#actList').innerHTML = shown.map(x=>`
+    <button class="act-row" role="tab" data-act-name="${esc(x.a.n)}"
+      aria-selected="${x.a.n===actSel}">
+      <span class="an">${esc(x.a.n)}</span>
+      <span class="ac">${x.live.length} left · ${x.pts}p</span>
+    </button>`).join('')
+    || `<div class="note">${q?'Nothing matches that.':'Nothing left.'}</div>`;
+
+  const sel = shown.find(x => x.a.n === actSel);
+  if(!sel){ $('#actDetail').innerHTML = list.length
+      ? '<div class="note">Pick an activity on the left.</div>'
+      : '<div class="note">Every tile is verified. Go outside.</div>'; return; }
+
+  const done = sel.a.g.filter(([id]) => byId(id) && prog(id).status === 'verified');
+  $('#actDetail').innerHTML = `
+    <h3 class="act-h">${esc(sel.a.n)}</h3>
+    <p class="act-sub">${sel.live.length} tile${sel.live.length===1?'':'s'} still open ·
+      ${sel.pts} point${sel.pts===1?'':'s'} on the line</p>
+    <div class="act-get">${sel.live.map(([id,what])=>{
+      const t=byId(id), s=prog(id), ev=evidence(t,s);
+      const state = s.assigned.length ? 'active' : 'none';
+      return `<button class="act-item st-${state}" data-goto="${id}">
+        <span class="act-id">${id}<br>${t.points}p</span>
+        <span><span class="act-tname">${esc(clean(t.task))}</span>
+          <span class="act-what">${esc(what)}</span>
+          <span class="act-prog">${ev.count}/${ev.need} logged${
+            s.assigned.length?' · '+esc(s.assigned.join(', ')):' · nobody assigned'}</span>
+        </span></button>`;}).join('')}</div>
+    ${done.length?`<div class="act-done-note">Already done here:
+      ${done.map(([id])=>esc(id)).join(', ')}</div>`:''}`;
+}
+
 /* ---------- tabs & io ---------- */
 function show(v){
   view=v;
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v));
-  ['board','draft','multi','roster'].forEach(k=>$('#v-'+k).hidden = k!==v);
+  ['board','draft','multi','acts','roster'].forEach(k=>$('#v-'+k).hidden = k!==v);
   if(v==='draft')draft(); if(v==='roster')roster(); if(v==='multi')multi();
+  if(v==='acts')activities();
 }
 function renderAll(){
   header(); identity(); strip(); boards(); banner(); setSync();
   if(view==='draft')draft(); if(view==='roster')roster(); if(view==='multi')multi();
+  if(view==='acts')activities();
 }
 
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>show(b.dataset.view));
@@ -2099,7 +2375,7 @@ $('#banner').onclick=e=>{
   /* a cached figure for a different window would be quietly wrong */
   if(EHB.window && EHB.window !== eventWindow().join('|')) EHB = {rows:{}, at:0, window:''};
 
-  show('board'); renderAll(); wireRate(); wireSyn();
+  show('board'); renderAll(); wireRate(); wireSyn(); wireActs();
 
   /* Read on load, then keep the board within AUTO_REFRESH of the database. Quiet,
      because nobody asked for this one - a failure still raises the banner. */
