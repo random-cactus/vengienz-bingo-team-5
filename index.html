@@ -661,20 +661,25 @@ const EMPTY = {event:{name:'Vengienz Summer Bingo 2026', start:'', end:''},
    tile's parts this activity supplies, so the tile can drop off once that part is
    logged even though the rest of the tile is outstanding. Only worth setting where
    a tile's parts come from DIFFERENT activities; a plain-count tile like A28 is
-   three interchangeable onyx and has nothing finer to check than the count. */
+   three interchangeable onyx and has nothing finer to check than the count.
+
+   On a POOL tile (A16, A25) the third element lists the pool options this activity
+   supplies, spelled exactly as they appear in the tile's pool. That is what turns
+   A25's "0/12" into Zulrah's honest "0/2". Rename an option in bin-seed.json and
+   you must rename it here - qa.py fails if the two ever disagree. */
 const ACTIVITIES = [
   {n:"Abyssal Sire", g:[["A17","Jar of miasma"], ["A19","Abyssal whip",["Whip"]], ["B13","Abyssal whip",["Whip"]]]},
   {n:"Abyssal demons", g:[["A19","Abyssal whip",["Whip"]], ["B13","Abyssal whip",["Whip"]]]},
   {n:"Alchemical Hydra", g:[
     ["A02","Dragon hunter lance"],
     ["A17","Jar of chemicals"],
-    ["A25","Alchemical Hydra"],
+    ["A25","Alchemical Hydra",["Alchemical Hydra"]],
     ["A35","Hydra's eye, fang, heart"],
   ]},
   {n:"Araxxor", g:[
     ["A17","Jar of venom"],
     ["A23","Etched Araxyte Fang (Rancor) or Noxious point/blade/pommel",["Fang", "Halberd piece"]],
-    ["A25","Araxxor"],
+    ["A25","Araxxor",["Araxxor (sub 1:00)"]],
     ["B16","Aranea boots (Araxytes)",["Aranea Boot"]],
   ]},
   {n:"Barbarian Assault", g:[["B09","20 Penance Queen kills"]]},
@@ -686,7 +691,7 @@ const ACTIVITIES = [
     ["A01","Ancestral hat / robe top / robe bottom"],
     ["A02","Dragon hunter crossbow"],
     ["A11","Twisted bow, Kodai insignia, Elder maul, Dragon claws, Dinh's bulwark"],
-    ["A16","Chambers Trio, Chambers 5-Man, CM Trio, CM 5-Man"],
+    ["A16","Chambers Trio, Chambers 5-Man, CM Trio, CM 5-Man",["Chambers Trio", "Chambers 5-Man", "CM Trio", "CM 5-Man"]],
     ["A20","Twisted buckler"],
     ["A27","Dexterous / Arcane prayer scroll; CM: Metamorphic dust, Twisted ancestral kit"],
     ["A28","Onyx (Tekton - 1/450-1/210)"],
@@ -704,11 +709,11 @@ const ACTIVITIES = [
     ["A21","Zenyte shard",["Zenyte"]],
     ["A23","Zenyte shard",["Zenyte"]],
   ]},
-  {n:"Doom of Mokhaiotl", g:[["A21","Mokhaiotl cloth",["Cloth"]], ["A25","Doom Racer"]]},
+  {n:"Doom of Mokhaiotl", g:[["A21","Mokhaiotl cloth",["Cloth"]], ["A25","Doom Racer",["Doom Racer"]]]},
   {n:"Fortis Colosseum", g:[
     ["A08","Colosseum GM speed runs (If Not Doing Inferno GM Speeds)",["Colo GM speed"]],
     ["A13","Sunfire fanatic set, Tonalztics of ralos, Echo crystal, Dizana's quiver, Pet"],
-    ["A25","Colo counts as a solo GM boss"],
+    ["A25","Colo counts as a solo GM boss",["Colo"]],
   ]},
   {n:"General Graardor (Bandos GWD)", g:[
     ["A18","Bandos hilt, godsword shards"],
@@ -722,11 +727,9 @@ const ACTIVITIES = [
   {n:"Mad Angel", g:[["A17","2nd Jar of light also satisfies 'any boss jar'"], ["A32","Jar of light"]]},
   {n:"Maggot King", g:[["A04","Elder venator fang - the Rupture upgrade",["Fang"]]]},
   {n:"Mining (any method)", g:[["B01","2m Mining XP"]]},
-  {n:"Moons of Peril (Neypotzli)", g:[
-    ["A07","Blood / Blue / Eclipse moon sets and weapons"],
-  ]},
+  {n:"Moons of Peril (Neypotzli)", g:[["A07","Blood / Blue / Eclipse moon sets and weapons"]]},
   {n:"Nex", g:[["A18","Ancient Hilt",["Hilt"]], ["A34","Damaged Torva",["Damaged Torva Piece (any)"]]]},
-  {n:"Phantom Muspah", g:[["A05","Venator shard ×5"], ["A25","Phantom Muspah"]]},
+  {n:"Phantom Muspah", g:[["A05","Venator shard ×5"], ["A25","Phantom Muspah",["Phantom Muspah"]]]},
   {n:"Sailing", g:[
     ["B10","2m Sailing XP"],
     ["B11","Dragon metal sheet ×16"],
@@ -745,29 +748,33 @@ const ACTIVITIES = [
     ["B08","2m Fishing XP"],
   ]},
   {n:"The Forgotten Four (Duke, Leviathan, Whisperer, Vardorvis)", g:[
-    ["A25","Duke Sucellus, Vardorvis, Leviathan and The Whisperer are each pool entries"],
+    ["A25","Duke Sucellus, Vardorvis, Leviathan and The Whisperer are each pool entries",["Duke Sucellus", "Vardorvis", "Leviathan", "The Whisperer"]],
     ["A33","Virtus pieces and the four Soulreaper axe components"],
   ]},
   {n:"The Gauntlet / Corrupted Gauntlet", g:[
-    ["A25","Gauntlet and Corrupted Gauntlet are separate pool entries"],
+    ["A25","Gauntlet and Corrupted Gauntlet are separate pool entries",["Gauntlet", "Corrupted Gauntlet"]],
     ["A36","Enhanced crystal weapon seed"],
   ]},
-  {n:"The Hueycoatl", g:[["A02","Dragon hunter wand (1/105)"], ["A16","Huey"], ["B07","Tome of earth (1/90)"]]},
+  {n:"The Hueycoatl", g:[
+    ["A02","Dragon hunter wand (1/105)"],
+    ["A16","Huey",["Huey"]],
+    ["B07","Tome of earth (1/90)"],
+  ]},
   {n:"The Inferno", g:[
     ["A08","Inferno GM speed runs (2 needed for this route)",["Inferno GM speed"]],
-    ["A25","Inferno"],
+    ["A25","Inferno",["Inferno"]],
   ]},
   {n:"The Nightmare / Phosani's", g:[
     ["A09","Inquisitor's, Nightmare staff, Harmonised / Volatile / Eldritch orb"],
-    ["A16","Nightmare (group)"],
+    ["A16","Nightmare (group)",["Nightmare"]],
     ["A17","Jar of dreams"],
-    ["A25","Phosani's Nightmare (solo)"],
+    ["A25","Phosani's Nightmare (solo)",["Phosani's Nightmare"]],
   ]},
   {n:"The Royal Titans", g:[["A14","Fire and Ice element staff crowns"]]},
   {n:"Theatre of Blood", g:[
     ["A01","Justiciar faceguard / chestguard / legguards"],
     ["A11","Scythe of vitur, Ghrazi rapier, Sanguinesti staff"],
-    ["A16","ToB Duo / 3 / 4 / 5-Man, HMT 3 / 4 / 5-Man"],
+    ["A16","ToB Duo / 3 / 4 / 5-Man, HMT 3 / 4 / 5-Man",["Tob Duo", "Tob 3 Man", "Tob 4 Man", "Tob 5 Man", "HMT 3 Man", "HMT 4 Man", "HMT 5 Man"]],
     ["A20","Avernic defender hilt"],
     ["A27","Sanguine dust, Sanguine kit; HMT: Holy ornament kit"],
   ]},
@@ -775,7 +782,7 @@ const ACTIVITIES = [
   {n:"Tombs of Amascut", g:[
     ["A01","Masori mask / body / chaps"],
     ["A11","Tumeken's shadow, Osmumten's fang"],
-    ["A16","Tombs Speed Runner 2"],
+    ["A16","TOA Expert 8-Man sub 18:00",["TOA Expert 8-Man sub 18:00 completion (any team size)"]],
     ["A20","Elidinis' ward"],
     ["A27","Lightbearer"],
   ]},
@@ -787,25 +794,23 @@ const ACTIVITIES = [
     ["B15","Dragon (Elite) or Demon mask (Master)"],
   ]},
   {n:"TzHaar / Fight Caves", g:[
-    ["A25","Fight Caves, and TzHaar-Ket-Rak's fifth challenge"],
+    ["A25","Fight Caves, and TzHaar-Ket-Rak's fifth challenge",["Fight Caves", "TzHaar-Ket-Rak's fifth challenge"]],
     ["B05","Obsidian helmet / platebody / platelegs from TzHaar-Ket"],
   ]},
   {n:"Venenatis / Spindel", g:[["A03","Dragon pickaxe"], ["A26","Voidwaker blade"]]},
   {n:"Vet'ion / Calvar'ion", g:[["A03","Dragon pickaxe"], ["A26","Voidwaker hilt"]]},
-  {n:"Vorkath", g:[["A17","Jar of decay (1/3,000)"], ["A25","Vorkath"]]},
+  {n:"Vorkath", g:[["A17","Jar of decay (1/3,000)"], ["A25","Vorkath",["Vorkath"]]]},
   {n:"Vyres / Venators", g:[["A10","Blood shard ×4"]]},
   {n:"Wintertodt", g:[["B07","Tome of fire"]]},
   {n:"Wyrms / Shadow wyrms", g:[["A03","Dragon harpoon"]]},
-  {n:"Yama", g:[["A16","Yama"], ["A31","Oathplate shards or Armor"]]},
-  {n:"Zalcano", g:[
-    ["B06","Crystal tool seed, Zalcano shard"],
-  ]},
+  {n:"Yama", g:[["A16","Yama",["Yama (1x2:34)"]], ["A31","Oathplate shards or Armor"]]},
+  {n:"Zalcano", g:[["B06","Crystal tool seed, Zalcano shard"]]},
   {n:"Zulrah", g:[
     ["A04","Onyx (for Rupture)",["Onyx"]],
     ["A17","Jar of swamp"],
     ["A21","Onyx (for Confliction)",["Onyx"]],
     ["A23","Onyx (for Rancor)",["Onyx"]],
-    ["A25","Zulrah - usable twice"],
+    ["A25","Zulrah - usable twice",["Zulrah"]],
     ["A28","Uncut onyx / onyx"],
   ]},
 ];
@@ -2285,8 +2290,26 @@ function actSlots(t, parts){
    Araxxor drops the Rancor fang AND all three Noxious pieces, and you only ever
    need one route. So those are reported per route ("Fang 0/1 or Halberd piece
    0/3") rather than summed into a 0/4 nobody has to reach. */
+/* Pool tiles work differently: a slot isn't a fixed part, it's whichever option
+   you drop into it. So an activity's ceiling is how many of the pool's options it
+   supplies times how often each may be reused - Zulrah is one boss usable twice,
+   so it can only ever fill 2 of A25's 12 slots, and Huey exactly 1 of A16's 6. */
+function actPool(t, parts){
+  if(!t.pool.length || !parts || !parts.length) return null;
+  const want = parts.map(p=>String(p).toLowerCase());
+  const opts = t.pool.filter(o=>want.includes(String(o).toLowerCase()));
+  if(!opts.length) return null;
+  return {opts, cap: Math.min(opts.length * Math.max(1, t.poolMax||1), t.ss)};
+}
+
 function actProgress(t, s, parts){
   const has = i => !!(s.slots[i] && s.slots[i].link && s.slots[i].link.trim());
+  const pool = actPool(t, parts);
+  if(pool){
+    const low = pool.opts.map(o=>o.toLowerCase());
+    const got = s.slots.filter((sl,i)=>has(i) && low.includes(String(sl.opt||'').toLowerCase()));
+    return [{label:'', got:Math.min(got.length, pool.cap), need:pool.cap}];
+  }
   const idx = actSlots(t, parts);
   if(!idx){ const ev = evidence(t, s); return [{label:'', got:ev.count, need:ev.need}]; }
   if(!t.alts.length) return [{label:'', got:idx.filter(has).length, need:idx.length}];
@@ -2307,10 +2330,9 @@ const actLive = a => a.g.filter(([id, , parts]) => {
   const s = prog(id);
   if(s.status === 'verified') return false;
   if(evidence(t, s).done) return false;      // everything logged, just needs verifying
-  const idx = actSlots(t, parts);
-  if(!idx) return true;
-  const has = i => !!(s.slots[i] && s.slots[i].link && s.slots[i].link.trim());
-  return idx.some(i => !has(i));
+  /* Read through the same function that draws the numbers, so the list and the
+     "0/2 from here" line can never disagree about whether there's anything left. */
+  return actProgress(t, s, parts).some(g => g.got < g.need);
 });
 
 function activities(){
