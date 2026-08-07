@@ -195,7 +195,7 @@ a{color:var(--gold)}
 .act-id{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--muted)}
 .act-tname{font-weight:600;display:block;margin-bottom:2px}
 .act-what{color:var(--muted);font-size:12.5px}
-.act-prog{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);margin-top:3px;display:block}
+.act-prog{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--text);margin-top:3px;display:block}
 .act-done-note{margin-top:14px;font-size:12.5px;color:var(--muted)}
 #actFind{background:var(--raise);border:1px solid var(--line);border-radius:8px;color:var(--text);
   padding:7px 11px;font-family:"Barlow",sans-serif;font-size:13.5px;min-width:190px}
@@ -647,10 +647,16 @@ const EMPTY = {event:{name:'Vengienz Summer Bingo 2026', start:'', end:''},
                boards:[], players:[], tasks:[], ratingKey:{}, footnotes:{}, progress:{}};
 /* Where each tile can actually be farmed - compiled from the OSRS Wiki, see
    activities.md. Like SYNERGY this is game knowledge rather than event data,
-   so it lives here and needs no re-import. qa.py checks every id resolves. */
+   so it lives here and needs no re-import. qa.py checks every id resolves.
+
+   [tileId, what it drops, parts?] - the optional third element names which of the
+   tile's parts this activity supplies, so the tile can drop off once that part is
+   logged even though the rest of the tile is outstanding. Only worth setting where
+   a tile's parts come from DIFFERENT activities; a plain-count tile like A28 is
+   three interchangeable onyx and has nothing finer to check than the count. */
 const ACTIVITIES = [
-  {n:"Abyssal Sire", g:[["A17","Jar of miasma"], ["A19","Abyssal whip"], ["B13","Abyssal whip"]]},
-  {n:"Abyssal demons", g:[["A19","Abyssal whip"], ["B13","Abyssal whip"]]},
+  {n:"Abyssal Sire", g:[["A17","Jar of miasma"], ["A19","Abyssal whip",["Whip"]], ["B13","Abyssal whip",["Whip"]]]},
+  {n:"Abyssal demons", g:[["A19","Abyssal whip",["Whip"]], ["B13","Abyssal whip",["Whip"]]]},
   {n:"Alchemical Hydra", g:[
     ["A02","Dragon hunter lance"],
     ["A17","Jar of chemicals"],
@@ -659,9 +665,9 @@ const ACTIVITIES = [
   ]},
   {n:"Araxxor", g:[
     ["A17","Jar of venom"],
-    ["A23","Etched Araxyte Fang (Rancor) or Noxious point/blade/pommel"],
+    ["A23","Etched Araxyte Fang (Rancor) or Noxious point/blade/pommel",["Fang", "Halberd piece"]],
     ["A25","Araxxor"],
-    ["B16","Aranea boots (Araxytes)"],
+    ["B16","Aranea boots (Araxytes)",["Aranea Boot"]],
   ]},
   {n:"Barbarian Assault", g:[["B09","20 Penance Queen kills"]]},
   {n:"Barrows", g:[["A22","All six brothers' helms, bodies, legs and weapons"]]},
@@ -677,51 +683,49 @@ const ACTIVITIES = [
     ["A27","Dexterous / Arcane prayer scroll; CM: Metamorphic dust, Twisted ancestral kit"],
     ["A28","Onyx (Tekton)"],
   ]},
-  {n:"Chaos Elemental", g:[
-    ["A03","Dragon pickaxe (1/256)"],
-  ]},
+  {n:"Chaos Elemental", g:[["A03","Dragon pickaxe (1/256)"]]},
   {n:"Corporeal Beast", g:[
     ["A17","Jar of spirits"],
     ["A29","Spectral / Arcane / Elysian sigil, Holy elixir, Spirit shield"],
   ]},
   {n:"Dagannoth Kings", g:[["A15","Berserker, Warrior, Seers, Archers rings"]]},
-  {n:"Dark beasts", g:[["B16","Dark bow"]]},
+  {n:"Dark beasts", g:[["B16","Dark bow",["Dark Bow"]]]},
   {n:"Demonic gorillas", g:[
-    ["A04","Zenyte shard"],
+    ["A04","Zenyte shard",["Zenyte"]],
     ["A06","Zenyte shard"],
-    ["A21","Zenyte shard"],
-    ["A23","Zenyte shard"],
+    ["A21","Zenyte shard",["Zenyte"]],
+    ["A23","Zenyte shard",["Zenyte"]],
   ]},
-  {n:"Doom of Mokhaiotl", g:[["A21","Mokhaiotl cloth + 10,000 demon tears"], ["A25","Doom Racer"]]},
+  {n:"Doom of Mokhaiotl", g:[["A21","Mokhaiotl cloth + 10,000 demon tears",["Cloth"]], ["A25","Doom Racer"]]},
   {n:"Fortis Colosseum", g:[
-    ["A04","Onyx (for Rupture) - wave 12"],
-    ["A08","Colosseum GM speed runs (4 needed for this route)"],
-    ["A13","Sunfire fanatic set, Tonalztics of ralos, Echo crystal, Dizana's quiver"],
-    ["A21","Onyx (for Confliction) - wave 12"],
-    ["A23","Onyx (for Rancor) - wave 12"],
+    ["A04","Onyx (for Rupture) - wave 12 (~1/44)",["Onyx"]],
+    ["A08","Colosseum GM speed runs (4 needed for this route)",["Colo GM speed"]],
+    ["A13","Sunfire fanatic set, Tonalztics of ralos, Echo crystal, Dizana's quiver, Pet"],
+    ["A21","Onyx (for Confliction) - wave 12 (~1/44)",["Onyx"]],
+    ["A23","Onyx (for Rancor) - wave 12 (~1/44)",["Onyx"]],
     ["A25","Colo counts as a solo GM boss"],
-    ["A28","Uncut onyx / onyx - wave 12"],
+    ["A28","Uncut onyx / onyx - wave 12 (~1/44)"],
   ]},
   {n:"General Graardor (Bandos GWD)", g:[
     ["A18","Bandos hilt, godsword shards"],
-    ["A34","Bandos chestplate / tassets / boots for the repair"],
+    ["A34","Bandos chestplate / tassets / boots for the repair",["Bandos Piece"]],
   ]},
   {n:"God Wars Dungeon (Kree'arra, Zilyana, K'ril)", g:[["A18","Hilts and godsword shards"]]},
   {n:"Kalphite Queen", g:[["A03","Dragon pickaxe (1/400)"], ["A17","Jar of sand"]]},
   {n:"King Black Dragon", g:[["A03","Dragon pickaxe (1/1,000)"]]},
-  {n:"Kraken", g:[["A17","Jar of dirt"], ["A19","Kraken tentacle"]]},
+  {n:"Kraken", g:[["A17","Jar of dirt"], ["A19","Kraken tentacle",["Kraken Tentacle"]]]},
   {n:"Lizardman shamans", g:[["A12","Dragon warhammer"]]},
   {n:"Mad Angel", g:[["A17","2nd Jar of light also satisfies 'any boss jar'"], ["A32","Jar of light"]]},
-  {n:"Maggot King", g:[["A04","Elder venator fang - the Rupture upgrade"]]},
+  {n:"Maggot King", g:[["A04","Elder venator fang - the Rupture upgrade",["Fang"]]]},
   {n:"Mining (any method)", g:[["B01","2m Mining XP"]]},
   {n:"Moons of Peril (Neypotzli)", g:[
-    ["A04","Onyx (for Rupture) - moon key chest"],
+    ["A04","Onyx (for Rupture) - moon key chest",["Onyx"]],
     ["A07","Blood / Blue / Eclipse moon sets and weapons"],
-    ["A21","Onyx (for Confliction) - moon key chest"],
-    ["A23","Onyx (for Rancor) - moon key chest"],
+    ["A21","Onyx (for Confliction) - moon key chest",["Onyx"]],
+    ["A23","Onyx (for Rancor) - moon key chest",["Onyx"]],
     ["A28","Uncut onyx / onyx - moon key chest"],
   ]},
-  {n:"Nex", g:[["A18","Ancient Hilt"], ["A34","Damaged Torva"]]},
+  {n:"Nex", g:[["A18","Ancient Hilt",["Hilt"]], ["A34","Damaged Torva",["Damaged Torva Piece (any)"]]]},
   {n:"Phantom Muspah", g:[["A05","Venator shard ×5"], ["A25","Phantom Muspah"]]},
   {n:"Sailing", g:[
     ["B10","2m Sailing XP"],
@@ -729,10 +733,10 @@ const ACTIVITIES = [
     ["B12","Bottled storm, Broken dragon hook, Dragon cannon barrel"],
   ]},
   {n:"Skotizo", g:[
-    ["A04","Onyx (for Rupture)"],
+    ["A04","Onyx (for Rupture)",["Onyx"]],
     ["A17","Jar of darkness"],
-    ["A21","Onyx (for Confliction)"],
-    ["A23","Onyx (for Rancor)"],
+    ["A21","Onyx (for Confliction)",["Onyx"]],
+    ["A23","Onyx (for Rancor)",["Onyx"]],
     ["A28","Uncut onyx / onyx"],
   ]},
   {n:"Tempoross", g:[
@@ -749,7 +753,10 @@ const ACTIVITIES = [
     ["A36","Enhanced crystal weapon seed"],
   ]},
   {n:"The Hueycoatl", g:[["A02","Dragon hunter wand (1/105)"], ["A16","Huey"], ["B07","Tome of earth (1/90)"]]},
-  {n:"The Inferno", g:[["A08","Inferno GM speed runs (2 needed for this route)"], ["A25","Inferno"]]},
+  {n:"The Inferno", g:[
+    ["A08","Inferno GM speed runs (2 needed for this route)",["Inferno GM speed"]],
+    ["A25","Inferno"],
+  ]},
   {n:"The Nightmare / Phosani's", g:[
     ["A09","Inquisitor's, Nightmare staff, Harmonised / Volatile / Eldritch orb"],
     ["A16","Nightmare (group)"],
@@ -764,13 +771,13 @@ const ACTIVITIES = [
     ["A20","Avernic defender hilt"],
     ["A27","Sanguine dust, Sanguine kit; HMT: Holy ornament kit"],
   ]},
-  {n:"Thermonuclear smoke devil", g:[["A17","Jar of smoke"], ["B13","Occult necklace"]]},
+  {n:"Thermonuclear smoke devil", g:[["A17","Jar of smoke"], ["B13","Occult necklace",["Occult"]]]},
   {n:"Tombs of Amascut", g:[
     ["A01","Masori mask / body / chaps"],
     ["A11","Tumeken's shadow, Osmumten's fang"],
     ["A16","Tombs Speed Runner 2"],
     ["A20","Elidinis' ward"],
-    ["A27","Lightbearer, Thread of Elidinis, the four keris upgrades"],
+    ["A27","Lightbearer"],
   ]},
   {n:"Tormented demons", g:[["A30","Burning claw, Tormented synapse"]]},
   {n:"Treasure Trails", g:[
@@ -790,17 +797,17 @@ const ACTIVITIES = [
   {n:"Wyrms / Shadow wyrms", g:[["A03","Dragon harpoon"]]},
   {n:"Yama", g:[["A16","Yama"], ["A31","Oathplate shards; Yama Contract gives 45"]]},
   {n:"Zalcano", g:[
-    ["A04","Onyx (for Rupture)"],
-    ["A21","Onyx (for Confliction)"],
-    ["A23","Onyx (for Rancor)"],
+    ["A04","Onyx (for Rupture)",["Onyx"]],
+    ["A21","Onyx (for Confliction)",["Onyx"]],
+    ["A23","Onyx (for Rancor)",["Onyx"]],
     ["A28","Uncut onyx / onyx"],
     ["B06","Crystal tool seed, Zalcano shard"],
   ]},
   {n:"Zulrah", g:[
-    ["A04","Onyx (for Rupture)"],
+    ["A04","Onyx (for Rupture)",["Onyx"]],
     ["A17","Jar of swamp"],
-    ["A21","Onyx (for Confliction)"],
-    ["A23","Onyx (for Rancor)"],
+    ["A21","Onyx (for Confliction)",["Onyx"]],
+    ["A23","Onyx (for Rancor)",["Onyx"]],
     ["A25","Zulrah - usable twice"],
     ["A28","Uncut onyx / onyx"],
   ]},
@@ -2235,7 +2242,56 @@ function wireRate(){
    every tile it feeds is verified - the point of the view is what is left to farm,
    and a boss with nothing outstanding is noise. */
 let actSel = '', actFilter = '';
-const actLive = a => a.g.filter(([id]) => byId(id) && prog(id).status !== 'verified');
+
+/* Which slots of a tile an activity's drop can fill. Only named parts can be
+   matched - subs, or the parts of an either/or route. A plain-count tile is N
+   interchangeable copies of one thing (A28 is three onyx), so there is nothing
+   finer to check there than the count, and we fall back to "helps until done". */
+function actSlots(t, parts){
+  if(!parts || !parts.length) return null;
+  const names = t.alts.length ? t.alts.flatMap(a=>a.parts) : t.subs;
+  if(!names || !names.length) return null;
+  const want = parts.map(p=>String(p).toLowerCase());
+  const idx = [];
+  names.forEach((n,i)=>{ if(want.includes(String(n).toLowerCase())) idx.push(i); });
+  return idx.length ? idx : null;
+}
+
+/* Progress in the context of one activity: only the slots it can actually fill.
+   Fortis Colosseum gives A23 exactly one thing - the onyx - so it reads 0/1 there,
+   not the tile's 0/3.
+
+   On an either/or tile the slots an activity supplies can straddle both routes:
+   Araxxor drops the Rancor fang AND all three Noxious pieces, and you only ever
+   need one route. So those are reported per route ("Fang 0/1 or Halberd piece
+   0/3") rather than summed into a 0/4 nobody has to reach. */
+function actProgress(t, s, parts){
+  const has = i => !!(s.slots[i] && s.slots[i].link && s.slots[i].link.trim());
+  const idx = actSlots(t, parts);
+  if(!idx){ const ev = evidence(t, s); return [{label:'', got:ev.count, need:ev.need}]; }
+  if(!t.alts.length) return [{label:'', got:idx.filter(has).length, need:idx.length}];
+  const names = t.alts.flatMap(a=>a.parts);
+  const out = [];
+  for(const r of evidence(t, s).routes){
+    const mine = idx.filter(i => r.idx.includes(i));
+    if(mine.length) out.push({label:names[mine[0]], got:mine.filter(has).length, need:mine.length});
+  }
+  return out.length ? out : [{label:'', got:0, need:idx.length}];
+}
+
+/* An activity is worth a trip for a tile while it still has something to give:
+   the tile isn't verified, its evidence isn't already complete, and at least one
+   of the parts this activity supplies is still missing. */
+const actLive = a => a.g.filter(([id, , parts]) => {
+  const t = byId(id); if(!t) return false;
+  const s = prog(id);
+  if(s.status === 'verified') return false;
+  if(evidence(t, s).done) return false;      // everything logged, just needs verifying
+  const idx = actSlots(t, parts);
+  if(!idx) return true;
+  const has = i => !!(s.slots[i] && s.slots[i].link && s.slots[i].link.trim());
+  return idx.some(i => !has(i));
+});
 
 function activities(){
   const list = ACTIVITIES
@@ -2268,21 +2324,33 @@ function activities(){
       ? '<div class="note">Pick an activity on the left.</div>'
       : '<div class="note">Every tile is verified. Go outside.</div>'; return; }
 
-  const done = sel.a.g.filter(([id]) => byId(id) && prog(id).status === 'verified');
+  /* Two different reasons a tile isn't listed: the whole tile is finished, or this
+     activity's part of it is. The second is worth saying out loud - the tile is
+     still open, you just won't find the missing piece here. */
+  const known = sel.a.g.filter(([id]) => byId(id));
+  const open = new Set(sel.live.map(([id]) => id));
+  const done = known.filter(([id]) => prog(id).status === 'verified');
+  const spent = known.filter(([id]) =>
+    !open.has(id) && prog(id).status !== 'verified');
   $('#actDetail').innerHTML = `
     <h3 class="act-h">${esc(sel.a.n)}</h3>
     <p class="act-sub">${sel.live.length} tile${sel.live.length===1?'':'s'} still open ·
       ${sel.pts} point${sel.pts===1?'':'s'} on the line</p>
-    <div class="act-get">${sel.live.map(([id,what])=>{
-      const t=byId(id), s=prog(id), ev=evidence(t,s);
+    <div class="act-get">${sel.live.map(([id,what,parts])=>{
+      const t=byId(id), s=prog(id);
       const state = s.assigned.length ? 'active' : 'none';
+      const got = actProgress(t, s, parts)
+        .map(g=>`${g.label?esc(g.label)+' ':''}${g.got}/${g.need}`).join(' or ');
       return `<button class="act-item st-${state}" data-goto="${id}">
         <span class="act-id">${id}<br>${t.points}p</span>
         <span><span class="act-tname">${esc(clean(t.task))}</span>
           <span class="act-what">${esc(what)}</span>
-          <span class="act-prog">${ev.count}/${ev.need} logged${
+          <span class="act-prog">${got} from here${
             s.assigned.length?' · '+esc(s.assigned.join(', ')):' · nobody assigned'}</span>
         </span></button>`;}).join('')}</div>
+    ${spent.length?`<div class="act-done-note">Nothing more from here:
+      ${spent.map(([id,what])=>`<b>${esc(id)}</b> (${esc(what.split(/[-(]/)[0].trim())} logged)`)
+        .join(', ')} — those tiles are still open, but not from this trip.</div>`:''}
     ${done.length?`<div class="act-done-note">Already done here:
       ${done.map(([id])=>esc(id)).join(', ')}</div>`:''}`;
 }
