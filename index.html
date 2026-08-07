@@ -197,6 +197,12 @@ a{color:var(--gold)}
 .act-what{color:var(--muted);font-size:12.5px}
 .act-prog{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--text);margin-top:3px;display:block}
 .act-done-note{margin-top:14px;font-size:12.5px;color:var(--muted)}
+/* The one tile left in a line is worth far more than its face value, so it gets
+   a fill rather than a tint - it should read as "do this one next". */
+.bonus{display:inline-block;margin-left:7px;padding:1px 6px;border-radius:3px;
+  background:var(--gold);color:var(--on-gold);font-family:"IBM Plex Mono",monospace;
+  font-size:11px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.flag.bonus{margin-left:0;border:1px solid var(--gold);font-size:11.5px;padding:2px 6px}
 #actFind{background:var(--raise);border:1px solid var(--line);border-radius:8px;color:var(--text);
   padding:7px 11px;font-family:"Barlow",sans-serif;font-size:13.5px;min-width:190px}
 #actFind:focus{outline:2px solid var(--gold);outline-offset:1px}
@@ -581,6 +587,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   <section class="view" id="v-acts" hidden>
     <div class="toolbar">
       <input type="search" id="actFind" placeholder="Find an activity" autocomplete="off">
+      <label class="flabel" style="margin:0">Sort by</label>
+      <select id="actSort" style="width:auto"><option value="pts">Points on the line</option><option value="left">Tiles left</option></select>
       <span class="note" id="actSummary"></span>
     </div>
     <div class="act-wrap">
@@ -737,7 +745,7 @@ const ACTIVITIES = [
     ["B08","2m Fishing XP"],
   ]},
   {n:"The Forgotten Four (Duke, Leviathan, Whisperer, Vardorvis)", g:[
-    ["A25","Duke Sucellus, Vardorvis and Leviathan are each pool entries"],
+    ["A25","Duke Sucellus, Vardorvis, Leviathan and The Whisperer are each pool entries"],
     ["A33","Virtus pieces and the four Soulreaper axe components"],
   ]},
   {n:"The Gauntlet / Corrupted Gauntlet", g:[
@@ -773,18 +781,19 @@ const ACTIVITIES = [
   ]},
   {n:"Tormented demons", g:[["A30","Burning claw, Tormented synapse"]]},
   {n:"Treasure Trails", g:[
-    ["B03","God trimmed rune (hard), god d'hide (elite)"],
+    ["B03","God trimmed rune (hard), god d'hide (hard)"],
     ["B04","Dragon ornament kits (master)"],
-    ["B14","God book pages"],
-    ["B15","Dragon or demon mask"],
+    ["B14","God book pages (Entrana - Med/Easy 1/408)"],
+    ["B15","Dragon (Elite) or Demon mask (Master)"],
   ]},
   {n:"TzHaar / Fight Caves", g:[
-    ["A25","Fight Caves"],
+    ["A25","Fight Caves, and TzHaar-Ket-Rak's fifth challenge"],
     ["B05","Obsidian helmet / platebody / platelegs from TzHaar-Ket"],
   ]},
   {n:"Venenatis / Spindel", g:[["A03","Dragon pickaxe"], ["A26","Voidwaker blade"]]},
   {n:"Vet'ion / Calvar'ion", g:[["A03","Dragon pickaxe"], ["A26","Voidwaker hilt"]]},
-  {n:"Vyrewatch Sentinels", g:[["A10","Blood shard ×4"]]},
+  {n:"Vorkath", g:[["A17","Jar of decay (1/3,000)"], ["A25","Vorkath"]]},
+  {n:"Vyres / Venators", g:[["A10","Blood shard ×4"]]},
   {n:"Wintertodt", g:[["B07","Tome of fire"]]},
   {n:"Wyrms / Shadow wyrms", g:[["A03","Dragon harpoon"]]},
   {n:"Yama", g:[["A16","Yama"], ["A31","Oathplate shards or Armor"]]},
@@ -1111,6 +1120,23 @@ function buildLines(){
             .map(l=>({...l,sum:l.tiles.reduce((a,t)=>a+t.points,0),ids:l.tiles.map(t=>t.id)}));
 }
 const lineDone = l => l.tiles.every(t=>isDone(t.id));
+
+/* What a tile is worth *right now*. Completing a line pays that line's points a
+   second time, so the last outstanding tile in a row is worth its own points plus
+   the whole line - often several times its face value. A corner tile can be the
+   last one in three lines at once, hence the sum rather than the max. */
+function lineBonus(id){
+  if(isDone(id)) return {bonus:0, lines:[]};
+  let bonus = 0; const lines = [];
+  for(const l of LINES){
+    if(!l.ids.includes(id)) continue;
+    if(l.ids.some(x => x !== id && !isDone(x))) continue;
+    bonus += l.sum; lines.push(l.label);
+  }
+  return {bonus, lines};
+}
+const bonusTip = b => `Last tile in ${b.lines.join(' and ')} - verifying it doubles `
+  + `${b.lines.length>1?'those lines':'that line'} for +${b.bonus}`;
 const lineFor = (k,kind,idx) => LINES.find(l=>l.board===k&&l.kind===kind&&l.idx===idx);
 const onDiag = id => LINES.some(l=>l.kind==='diag'&&l.ids.includes(id));
 
@@ -1454,7 +1480,9 @@ function boards(){
               !done && pend   ? '<span class="flag">&#9670; Pending</span>' : '',
               hasSession(s)   ? '<span class="flag sess">&#9683; Session</span>' : '',
               sy ? `<span class="flag syn syn${sy}" title="${esc(synTip(t.id))}"
-                     aria-label="${esc(SYNERGY[sy-1].label)}">${SYNERGY[sy-1].glyph}</span>` : ''
+                     aria-label="${esc(SYNERGY[sy-1].label)}">${SYNERGY[sy-1].glyph}</span>` : '',
+              (()=>{ const b=lineBonus(t.id); return b.bonus
+                ? `<span class="flag bonus" title="${esc(bonusTip(b))}">+${b.bonus} BONUS!</span>` : ''; })()
             ].filter(Boolean);
             return f.length?`<div class="flags">${f.join('')}</div>`:'';})()}
           ${(()=>{
@@ -1557,6 +1585,8 @@ function openTile(id){
     <span class="chip">${t.ss} screenshot${t.ss>1?'s':''}</span>
     <span class="chip ${L.length?'g':'r'}">${L.length} volunteer${L.length===1?'':'s'}</span>
     ${blocked(t)?`<span class="chip r">${blocked(t)} blocked</span>`:''}
+    ${(()=>{ const b=lineBonus(id); return b.bonus
+      ? `<span class="chip gold" title="${esc(bonusTip(b))}">+${b.bonus} line bonus</span>` : ''; })()}
     ${synOf(id)?`<span class="chip syn syn${synOf(id)}">${
       SYNERGY[synOf(id)-1].glyph} ${esc(SYNERGY[synOf(id)-1].label)}</span>`:''}`;
 
@@ -2147,6 +2177,8 @@ function wireActs(){
   });
   const f=$('#actFind');
   if(f) f.oninput = ()=>{ actFilter = f.value; activities(); };
+  const so=$('#actSort');
+  if(so) so.onchange = ()=>{ actSort = so.value; activities(); };
 }
 
 function wireSyn(){
@@ -2229,7 +2261,7 @@ function wireRate(){
    Which bosses still have something to give. An activity drops off the list once
    every tile it feeds is verified - the point of the view is what is left to farm,
    and a boss with nothing outstanding is noise. */
-let actSel = '', actFilter = '';
+let actSel = '', actFilter = '', actSort = 'pts';
 
 /* Which slots of a tile an activity's drop can fill. Only named parts can be
    matched - subs, or the parts of an either/or route. A plain-count tile is N
@@ -2285,8 +2317,15 @@ function activities(){
   const list = ACTIVITIES
     .map(a => ({a, live: actLive(a)}))
     .filter(x => x.live.length)
-    .map(x => ({...x, pts: x.live.reduce((n,[id]) => n + (byId(id).points||0), 0)}))
-    .sort((p,q) => q.live.length - p.live.length || q.pts - p.pts || p.a.n.localeCompare(q.a.n));
+    /* Face value plus any line a tile would light on its own - two tiles can never
+       claim the same line, because a line with two left has nobody last in it. */
+    .map(x => ({...x, pts: x.live.reduce((n,[id]) =>
+      n + (byId(id).points||0) + lineBonus(id).bonus, 0)}))
+    /* Both orders fall back on the other before the name, so an activity never
+       jumps around between two rows that look identical in the chosen column. */
+    .sort((p,q) => actSort === 'pts'
+      ? q.pts - p.pts || q.live.length - p.live.length || p.a.n.localeCompare(q.a.n)
+      : q.live.length - p.live.length || q.pts - p.pts || p.a.n.localeCompare(q.a.n));
 
   const q = actFilter.trim().toLowerCase();
   const shown = q ? list.filter(x => x.a.n.toLowerCase().includes(q)) : list;
@@ -2329,9 +2368,11 @@ function activities(){
       const state = s.assigned.length ? 'active' : 'none';
       const got = actProgress(t, s, parts)
         .map(g=>`${g.label?esc(g.label)+' ':''}${g.got}/${g.need}`).join(' or ');
+      const b = lineBonus(id);
       return `<button class="act-item st-${state}" data-goto="${id}">
         <span class="act-id">${id}<br>${t.points}p</span>
-        <span><span class="act-tname">${esc(clean(t.task))}</span>
+        <span><span class="act-tname">${esc(clean(t.task))}${b.bonus
+          ? `<span class="bonus" title="${esc(bonusTip(b))}">+${b.bonus} BONUS!</span>` : ''}</span>
           <span class="act-what">${esc(what)}</span>
           <span class="act-prog">${got} from here${
             s.assigned.length?' · '+esc(s.assigned.join(', ')):' · nobody assigned'}</span>
